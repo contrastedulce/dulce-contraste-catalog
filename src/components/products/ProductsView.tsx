@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Cake, Pencil, Trash2, Search, LayoutGrid, List } from 'lucide-react';
+import { Plus, Cake, Pencil, Trash2, Search, LayoutGrid, List, Power } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GlassCard } from '../shared/GlassCard';
 import { Button } from '../shared/Button';
@@ -15,6 +15,7 @@ interface ProductsViewProps {
   onAddProduct: () => void;
   onEditProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void;
+  onToggleVisibility?: (id: string) => void;
   getProductCost: (product: Product, formatName: string) => { total: number; variable: number; fixed: number };
   formatCurrency: (amount: number) => string;
 }
@@ -26,15 +27,25 @@ export const ProductsView = React.memo<ProductsViewProps>(({
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
+  onToggleVisibility,
   getProductCost,
   formatCurrency,
   setGlobalSearch
 }) => {
-  const [viewMode, setViewMode] = React.useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = React.useState<'grid' | 'list'>(() => {
+    return (localStorage.getItem('products_view_mode') as 'grid' | 'list') || 'grid';
+  });
 
-  const filteredProducts = products.filter(p => 
-    (p.name || '').toLowerCase().includes(globalSearch.toLowerCase())
-  );
+  const handleSetViewMode = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('products_view_mode', mode);
+  };
+
+  const filteredProducts = products
+    .filter(p => 
+      (p.name || '').toLowerCase().includes(globalSearch.toLowerCase())
+    )
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   return (
     <div className="space-y-8">
@@ -56,14 +67,14 @@ export const ProductsView = React.memo<ProductsViewProps>(({
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex bg-slate-100/50 p-1.5 rounded-2xl w-fit shadow-inner border border-slate-100/50">
           <button 
-            onClick={() => setViewMode('grid')}
+            onClick={() => handleSetViewMode('grid')}
             className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? "bg-white text-blue-600 shadow-xl shadow-slate-200/50" : "text-slate-400 hover:text-slate-600"}`}
             title="Vista de Cuadrícula"
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
           <button 
-            onClick={() => setViewMode('list')}
+            onClick={() => handleSetViewMode('list')}
             className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? "bg-white text-blue-600 shadow-xl shadow-slate-200/50" : "text-slate-400 hover:text-slate-600"}`}
             title="Vista de Lista"
           >
@@ -109,6 +120,18 @@ export const ProductsView = React.memo<ProductsViewProps>(({
                     {!isList && (
                       <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button 
+                          onClick={() => onToggleVisibility?.(product.id)}
+                          className={cn(
+                            "p-2.5 bg-white rounded-xl shadow-sm border transition-all",
+                            product.isActive !== false 
+                              ? "text-emerald-500 hover:bg-emerald-50 border-emerald-100" 
+                              : "text-slate-300 hover:bg-slate-50 border-slate-100"
+                          )}
+                          title={product.isActive !== false ? "Visible en Catálogo" : "Oculto en Catálogo"}
+                        >
+                          <Power className="w-4 h-4" />
+                        </button>
+                        <button 
                           onClick={() => onEditProduct(product)}
                           className="p-2.5 bg-white hover:bg-slate-50 rounded-xl text-slate-400 hover:text-primary-600 shadow-sm border border-slate-100 transition-all"
                         >
@@ -127,10 +150,16 @@ export const ProductsView = React.memo<ProductsViewProps>(({
                   <div className={cn("flex-1 min-w-0", !isList && "mb-8")}>
                     <div className="flex items-center justify-between gap-4">
                       <div className="min-w-0">
-                        <h3 className={cn(
-                          "font-black text-slate-800 leading-tight group-hover:text-blue-600 transition-colors truncate",
-                          isList ? "text-lg" : "text-2xl"
-                        )}>{product.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className={cn(
+                            "font-black text-slate-800 leading-tight group-hover:text-blue-600 transition-colors truncate",
+                            isList ? "text-lg" : "text-2xl",
+                            product.isActive === false && "opacity-50 line-through text-slate-400"
+                          )}>{product.name}</h3>
+                          {product.isActive === false && (
+                            <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full">OCULTO</span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                            <Badge variant="blue" className={isList ? "py-0 px-2 text-[8px]" : ""}>
                             Receta: {recipe?.name || 'No asignada'}
@@ -144,6 +173,18 @@ export const ProductsView = React.memo<ProductsViewProps>(({
                       </div>
                       {isList && (
                         <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <button 
+                            onClick={() => onToggleVisibility?.(product.id)}
+                            className={cn(
+                              "p-2 bg-white rounded-lg shadow-sm border transition-all",
+                              product.isActive !== false 
+                                ? "text-emerald-500 hover:bg-emerald-50 border-emerald-100" 
+                                : "text-slate-300 hover:bg-slate-50 border-slate-100"
+                            )}
+                            title={product.isActive !== false ? "Visible en Catálogo" : "Oculto en Catálogo"}
+                          >
+                            <Power className="w-3.5 h-3.5" />
+                          </button>
                           <button 
                             onClick={() => onEditProduct(product)}
                             className="p-2 bg-white hover:bg-slate-50 rounded-lg text-slate-400 hover:text-primary-600 shadow-sm border border-slate-100 transition-all"

@@ -17,11 +17,13 @@ function sync() {
     const products = db.products || [];
     const settings = db.settings || {};
 
-    const content = `import { Product, AppSettings } from '../types';
+    const content = `import { Product, AppSettings, Recipe } from '../types';
 
 export const INITIAL_PRODUCTS: Product[] = ${JSON.stringify(products, null, 2)};
 
 export const INITIAL_SETTINGS: AppSettings = ${JSON.stringify(settings, null, 2)};
+
+export const INITIAL_RECIPES: Recipe[] = ${JSON.stringify(db.recipes || [], null, 2)};
 `;
 
     fs.writeFileSync(TARGET_PATH, content);

@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { GlassCard } from '../shared/GlassCard';
 
 interface StatCardProps {
   title: string;
@@ -15,6 +14,14 @@ interface StatCardProps {
   delay?: number;
 }
 
+const colorMap = {
+  rose:    { icon: 'bg-gradient-to-br from-rose-400 to-rose-600',    glow: 'shadow-rose-200/50',    badge: 'bg-rose-50 text-rose-600',    bar: 'from-rose-300 to-rose-500' },
+  blue:    { icon: 'bg-gradient-to-br from-blue-400 to-blue-600',    glow: 'shadow-blue-200/50',    badge: 'bg-blue-50 text-blue-600',    bar: 'from-blue-300 to-blue-500' },
+  emerald: { icon: 'bg-gradient-to-br from-emerald-400 to-emerald-600', glow: 'shadow-emerald-200/50', badge: 'bg-emerald-50 text-emerald-600', bar: 'from-emerald-300 to-emerald-500' },
+  amber:   { icon: 'bg-gradient-to-br from-amber-400 to-amber-500',  glow: 'shadow-amber-200/50',   badge: 'bg-amber-50 text-amber-600',   bar: 'from-amber-300 to-amber-500' },
+  purple:  { icon: 'bg-gradient-to-br from-purple-400 to-purple-600', glow: 'shadow-purple-200/50',  badge: 'bg-purple-50 text-purple-600', bar: 'from-purple-300 to-purple-500' },
+};
+
 export const StatCard: React.FC<StatCardProps> = ({ 
   title, 
   value, 
@@ -25,64 +32,75 @@ export const StatCard: React.FC<StatCardProps> = ({
   onClick,
   delay = 0
 }) => {
-  const colors = {
-    rose: "text-rose-600 bg-rose-50 border-rose-100",
-    blue: "text-blue-600 bg-blue-50 border-blue-100",
-    emerald: "text-emerald-600 bg-emerald-50 border-emerald-100",
-    amber: "text-amber-600 bg-amber-50 border-amber-100",
-    purple: "text-purple-600 bg-purple-50 border-purple-100",
-  };
-
-  const iconColors = {
-    rose: "bg-rose-500",
-    blue: "bg-blue-500",
-    emerald: "bg-emerald-500",
-    amber: "bg-amber-500",
-    purple: "bg-purple-500",
-  };
+  const c = colorMap[color];
 
   return (
-    <GlassCard 
-      delay={delay}
-      className="relative overflow-hidden group border-none shadow-sm"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        delay,
+        duration: 0.4,
+        type: 'spring',
+        stiffness: 200,
+        damping: 20
+      }}
       onClick={onClick}
+      className={cn(
+        "relative bg-white rounded-3xl p-6 overflow-hidden cursor-pointer",
+        "border border-rose-100/60",
+        "shadow-lg shadow-rose-100/30",
+        "card-hover group"
+      )}
     >
-      <div className="flex items-start justify-between relative z-10">
-        <div className="space-y-4">
-          <div className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110 duration-500",
-            iconColors[color]
-          )}>
-            <Icon className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</p>
-            <h4 className="text-2xl font-black text-slate-800 tracking-tight mt-1">{value}</h4>
-          </div>
-          
-          {change && (
-            <div className={cn(
-              "flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-lg w-fit",
-              trend === 'up' ? "bg-emerald-50 text-emerald-600" : 
-              trend === 'down' ? "bg-rose-50 text-rose-600" : 
-              "bg-slate-50 text-slate-500"
-            )}>
-              {trend === 'up' ? <TrendingUp className="w-3 h-3" /> : 
-               trend === 'down' ? <TrendingDown className="w-3 h-3" /> : null}
-              {change}
-            </div>
-          )}
-        </div>
-
-        <div className="absolute -right-8 -top-8 p-12 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-500 pointer-events-none">
-          <Icon size={120} strokeWidth={1} />
-        </div>
-      </div>
-      
+      {/* Icon */}
       <div className={cn(
-        "absolute bottom-0 left-0 h-1 bg-linear-to-r from-transparent via-current to-transparent opacity-20 w-full transition-all duration-500",
-        trend === 'up' ? "text-emerald-500" : trend === 'down' ? "text-rose-500" : "text-slate-300"
+        "w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5",
+        "shadow-lg transition-transform duration-300 group-hover:scale-110",
+        c.icon,
+        c.glow
+      )}>
+        <Icon className="w-6 h-6" />
+      </div>
+
+      {/* Value & Title */}
+      <div className="mb-4">
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{title}</p>
+        <motion.h4
+          key={String(value)}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: delay + 0.1 }}
+          className="text-2xl font-black text-slate-800 tracking-tight"
+        >
+          {value}
+        </motion.h4>
+      </div>
+
+      {/* Badge */}
+      {change && (
+        <div className={cn(
+          "flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1 rounded-lg w-fit",
+          trend === 'up'   ? "bg-emerald-50 text-emerald-600" :
+          trend === 'down' ? "bg-rose-50 text-rose-600" :
+          "bg-slate-50 text-slate-500"
+        )}>
+          {trend === 'up'   && <TrendingUp className="w-3 h-3" />}
+          {trend === 'down' && <TrendingDown className="w-3 h-3" />}
+          {change}
+        </div>
+      )}
+
+      {/* Bottom color bar */}
+      <div className={cn(
+        "absolute bottom-0 left-0 h-1 w-full bg-linear-to-r opacity-40",
+        c.bar
       )} />
-    </GlassCard>
+
+      {/* Ghost icon background */}
+      <div className="absolute -right-6 -bottom-6 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity duration-500 pointer-events-none">
+        <Icon size={100} strokeWidth={1} />
+      </div>
+    </motion.div>
   );
 };

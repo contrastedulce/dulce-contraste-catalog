@@ -22,6 +22,154 @@
   
   --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+  /* Redesign tokens */
+  --color-espresso: #1C1410;
+  --color-espresso-light: #2C1F18;
+  --color-amber-accent: #F5A623;
+  --color-cream: #FFF8F2;
+  --color-cream-dark: #FFF0E6;
+}
+
+/* ─── Keyframes ────────────────────────────────── */
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Animation Utilities ─────────────────────── */
+.animate-float       { animation: float 6s ease-in-out infinite; }
+.animate-pulse-soft  { animation: pulse-soft 3s ease-in-out infinite; }
+.animate-fade-up     { animation: fade-up 0.4s ease-out both; }
+.animate-count-up    { animation: count-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-slide-right { animation: slide-in-right 0.3s ease-out both; }
+
+/* Stagger delays for card groups */
+.stagger-1  { animation-delay: 0.05s; }
+.stagger-2  { animation-delay: 0.10s; }
+.stagger-3  { animation-delay: 0.15s; }
+.stagger-4  { animation-delay: 0.20s; }
+.stagger-5  { animation-delay: 0.25s; }
+
+/* ─── Card Lift Hover ─────────────────────────── */
+.card-hover {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Button Press Micro-feedback ─────────────── */
+.btn-press {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* ─── Shimmer Loading ─────────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #fafafa 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Glassmorphism ───────────────────────────── */
+.glass-morphism {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-glass;
+}
+.glass-morphism-dark {
+  @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-glass;
+}
+
+/* ─── Glaze Shine Effect ──────────────────────── */
+.glaze-effect { position: relative; overflow: hidden; }
+.glaze-effect::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-25deg);
+  transition: 0.75s;
+  pointer-events: none;
+}
+.glaze-effect:hover::after { left: 150%; }
+
+/* ─── Espresso Sidebar ────────────────────────── */
+.sidebar-espresso {
+  background: linear-gradient(180deg, #1C1410 0%, #241810 100%);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+}
+
+/* ─── Base Styles ─────────────────────────────── */
+@layer base {
+  body {
+    @apply antialiased text-slate-900 selection:bg-rose-100 selection:text-rose-600;
+    background-color: #FFF8F2;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-slate-800;
+  }
+}
+
+/* ─── Custom Scrollbar ────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar       { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { @apply bg-transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+@theme {
+  --font-sans: "Inter", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  
+  --color-primary: var(--primary-color, #f43f5e);
+  --color-primary-600: var(--primary-color, #f43f5e);
+  --color-primary-500: var(--primary-color-light, #fb7185);
+  --color-primary-400: var(--primary-color-lighter, #fda4af);
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2.5rem;
+  --radius-custom: var(--border-radius, 2rem);
+  
+  --spacing-card: var(--card-padding, 2rem);
+  --width-sidebar: var(--sidebar-width, 18rem);
+  --width-sidebar-collapsed: 5rem;
+  
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
 @keyframes float {

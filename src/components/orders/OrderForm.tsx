@@ -39,17 +39,36 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nombre del Cliente</label>
-        <div className="relative">
-          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-          <input
-            type="text"
-            value={orderFormData.customerName}
-            onChange={(e) => setOrderFormData({ ...orderFormData, customerName: e.target.value })}
-            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all font-bold"
-            placeholder="Ej: María García"
-          />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-1 space-y-2">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tipo Doc.</label>
+          <select
+            value={orderFormData.taxData?.documentType || 'nota'}
+            onChange={(e) => setOrderFormData({ 
+              ...orderFormData, 
+              taxData: { ...(orderFormData.taxData || { documentNumber: '' }), documentType: e.target.value as any } 
+            })}
+            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all font-bold"
+          >
+            <option value="nota">Nota de Venta</option>
+            <option value="boleta">Boleta (DNI)</option>
+            <option value="factura">Factura (RUC)</option>
+          </select>
+        </div>
+        <div className="md:col-span-2 space-y-2">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            {orderFormData.taxData?.documentType === 'factura' ? 'RUC / Razón Social' : 'DNI / Nombre Cliente'}
+          </label>
+          <div className="relative">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+            <input
+              type="text"
+              value={orderFormData.customerName}
+              onChange={(e) => setOrderFormData({ ...orderFormData, customerName: e.target.value })}
+              className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all font-bold"
+              placeholder={orderFormData.taxData?.documentType === 'factura' ? "20123456789 - Empresa SAC" : "DNI - Nombre completo"}
+            />
+          </div>
         </div>
       </div>
 
@@ -128,6 +147,30 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha de Entrega</label>
+          <div className="relative">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+            <input
+              type="date"
+              value={orderFormData.deliveryDate || ''}
+              onChange={(e) => setOrderFormData({ ...orderFormData, deliveryDate: e.target.value })}
+              className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all font-bold"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Hora de Entrega</label>
+          <input
+            type="time"
+            value={orderFormData.deliveryTime || ''}
+            onChange={(e) => setOrderFormData({ ...orderFormData, deliveryTime: e.target.value })}
+            className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all font-bold"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-100">

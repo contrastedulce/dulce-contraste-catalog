@@ -61,12 +61,14 @@ export const InventoryView = React.memo<InventoryViewProps>(({
 
   const filteredSupplies = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    return supplies.filter(s => {
-      const matchesSearch = !term || (s.name || '').toLowerCase().includes(term) || 
-                           (s.category || '').toLowerCase().includes(term);
-      const matchesFilter = inventoryFilter === 'all' || s.stock <= s.minStock;
-      return matchesSearch && matchesFilter;
-    });
+    return supplies
+      .filter(s => {
+        const matchesSearch = !term || (s.name || '').toLowerCase().includes(term) || 
+                             (s.category || '').toLowerCase().includes(term);
+        const matchesFilter = inventoryFilter === 'all' || s.stock <= s.minStock;
+        return matchesSearch && matchesFilter;
+      })
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   }, [supplies, searchTerm, inventoryFilter]);
 
   const visibleSupplies = filteredSupplies.slice(0, visibleCount);

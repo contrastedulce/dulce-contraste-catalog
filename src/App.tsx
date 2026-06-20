@@ -49,8 +49,9 @@ import { ToolkitView } from './components/toolkit/ToolkitView';
 import { SettingsView } from './components/settings/SettingsView';
 import { CustomersView } from './components/customers/CustomersView';
 import { ShoppingListView } from './components/shopping/ShoppingListView';
-import { INITIAL_PRODUCTS, INITIAL_SETTINGS } from './constants/initialData';
+import { INITIAL_PRODUCTS, INITIAL_SETTINGS, INITIAL_RECIPES } from './constants/initialData';
 import { PublicCatalogView } from './components/public/PublicCatalogView';
+import { VoiceRecipeModal } from './components/recipes/VoiceRecipeModal';
 import { createSyncChannel } from './lib/windowSync';
 import { RecipeForm } from './components/recipes/RecipeForm';
 import { OrderForm } from './components/orders/OrderForm';
@@ -186,11 +187,13 @@ export default function App() {
   const [inventoryFilter, setInventoryFilter] = useState<'all' | 'critical'>('all');
   const [orders, setOrders] = useState<Order[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>(INITIAL_RECIPES);
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [voiceText, setVoiceText] = useState('');
   const [importText, setImportText] = useState('');
   const [importProgress, setImportProgress] = useState(0);
   const [isSupplyModalOpen, setIsSupplyModalOpen] = useState(false);
@@ -253,7 +256,9 @@ export default function App() {
     recipeId: '',
     type: 'single',
     saleFormats: [{ name: 'Unidad', multiplier: 1, price: 0 }],
-    margin: 30
+    margin: 30,
+    categoryGroup: '',
+    isActive: true
   });
 
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -427,6 +432,89 @@ export default function App() {
 
     syncData();
   }, []);
+
+  // Request browser notification permission (Admin only)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view')?.toLowerCase();
+    if ((view === 'admin' || !view) && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Play alert sound using Web Audio API (no external files needed)
+  const playOrderAlert = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.3);
+        osc.start(ctx.currentTime + i * 0.15);
+        osc.stop(ctx.currentTime + i * 0.15 + 0.3);
+      });
+    } catch (e) {
+      console.warn('Audio alert failed:', e);
+    }
+  };
+
+  // Background polling for new orders (Admin view only)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view')?.toLowerCase();
+
+    if (view === 'admin' || !view) {
+      const interval = setInterval(async () => {
+        try {
+          const response = await fetch('/api/db');
+          if (response.ok) {
+            const serverData = await response.json();
+            if (serverData.orders && serverData.orders.length !== orders.length) {
+              const newCount = serverData.orders.length - orders.length;
+              setOrders(serverData.orders);
+
+              // Only alert for new orders (not deletions)
+              if (newCount > 0) {
+                const latestOrder = serverData.orders[serverData.orders.length - 1];
+                const isFromCatalog = latestOrder?.source === 'catalog';
+                const msg = isFromCatalog
+                  ? `🍰 ¡Nuevo pedido web de ${latestOrder.customerName}! Total: S/ ${latestOrder.total?.toFixed(2)}`
+                  : `📋 ${newCount} nuevo(s) pedido(s) registrado(s)`;
+
+                // 1. In-app notification bar
+                setNotification({ message: msg, type: 'success' });
+
+                // 2. Browser push notification
+                if ('Notification' in window && Notification.permission === 'granted') {
+                  new Notification('🍰 Dulce Contraste — Nuevo Pedido', {
+                    body: isFromCatalog
+                      ? `${latestOrder.customerName} realizó un pedido por S/ ${latestOrder.total?.toFixed(2)}`
+                      : `Tienes ${newCount} pedido(s) nuevo(s)`,
+                    icon: '/favicon.ico',
+                    tag: 'new-order',
+                    requireInteraction: true,
+                  });
+                }
+
+                // 3. Sound alert
+                playOrderAlert();
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Error en polling de datos:', e);
+        }
+      }, 15000); // Each 15 seconds for faster response
+
+      return () => clearInterval(interval);
+    }
+  }, [orders.length]);
 
   // State Synchronization Bridge (Shared across all windows/popouts)
   const syncChannelRef = useRef<any>(null);
@@ -1662,7 +1750,11 @@ export default function App() {
       margin: safeNum(productFormData.margin) || 30,
       image: productFormData.image,
       description: productFormData.description,
-      category: productFormData.category
+      category: productFormData.category,
+      categoryGroup: productFormData.categoryGroup,
+      isActive: productFormData.isActive ?? true,
+      isFeatured: productFormData.isFeatured ?? false,
+      discountPrice: productFormData.discountPrice
     };
 
     if (editingProduct) {
@@ -1674,7 +1766,21 @@ export default function App() {
     }
     setIsProductModalOpen(false);
     setEditingProduct(null);
-    setProductFormData({ name: '', recipeId: '', type: 'single', saleFormats: [{ name: 'Unidad', multiplier: 1, price: 0 }], margin: 30 });
+    setProductFormData({ 
+      name: '', 
+      recipeId: '', 
+      type: 'single', 
+      saleFormats: [{ name: 'Unidad', multiplier: 1, price: 0 }], 
+      margin: 30, 
+      categoryGroup: '', 
+      isActive: true,
+      isFeatured: false
+    });
+  };
+
+  const handleToggleProductVisibility = (id: string) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, isActive: p.isActive === false } : p));
+    showNotification('Visibilidad de producto actualizada', 'success');
   };
 
   const handleDeleteProduct = (id: string) => {
@@ -2203,6 +2309,7 @@ export default function App() {
             getRecipeCost={getRecipeCost}
             formatCurrency={(amt) => formatCurrency(amt, theme.currency)}
             settings={settings}
+            onVoiceImport={() => setIsVoiceModalOpen(true)}
           />
         );
       case 'orders':
@@ -2234,6 +2341,7 @@ export default function App() {
             isProcessingReceipt={isProcessingOrderReceipt}
             aiCooldown={aiCooldown}
             formatCurrency={(amt) => formatCurrency(amt, theme.currency)}
+            onGenerateSunat={handleGenerateSunatFiles}
           />
         );
       case 'products':
@@ -2245,7 +2353,15 @@ export default function App() {
             setGlobalSearch={setGlobalSearch}
             onAddProduct={() => {
               setEditingProduct(null);
-              setProductFormData({ name: '', recipeId: '', saleFormats: [] });
+              setProductFormData({ 
+                name: '', 
+                recipeId: '', 
+                type: 'single', 
+                saleFormats: [{ name: 'Unidad', multiplier: 1, price: 0 }], 
+                margin: 30, 
+                categoryGroup: '',
+                isActive: true
+              });
               setIsProductModalOpen(true);
             }}
             onEditProduct={(p: Product) => {
@@ -2254,6 +2370,7 @@ export default function App() {
               setIsProductModalOpen(true);
             }}
             onDeleteProduct={handleDeleteProduct}
+            onToggleVisibility={handleToggleProductVisibility}
             getProductCost={getProductCost}
             formatCurrency={(amt) => formatCurrency(amt, theme.currency)}
           />
@@ -2393,14 +2510,109 @@ export default function App() {
   
   // If no view is specified, or view is 'catalog', show the public catalog
   if (!view || view === 'catalog') {
-    return (
-      <PublicCatalogView 
-        products={products}
-        settings={settings}
-        formatCurrency={(amt) => formatCurrency(amt, theme.currency)}
-      />
-    );
+    // If we are on localhost and no view is specified, default to admin for the owner
+    if (!view && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+       // Continue to admin view logic below
+    } else {
+      return (
+        <PublicCatalogView 
+          products={products}
+          settings={settings}
+          recipes={recipes}
+          formatCurrency={(amt) => formatCurrency(amt, theme.currency)}
+        />
+      );
+    }
   }
+
+  const handleVoiceRecipeImport = async (text: string) => {
+    if (!text.trim()) return;
+    setIsImporting(true);
+    setImportProgress(10);
+    
+    try {
+      const prompt = `Extrae la receta de este texto dictado. 
+      Responde ÚNICAMENTE en JSON con este formato: 
+      { 
+        "name": "Nombre", 
+        "yield": 1, 
+        "yieldUnit": "unidad", 
+        "ingredients": [{ "name": "Ingrediente", "quantity": 100, "unit": "g" }] 
+      }`;
+
+      const response = await fetch('/api/ai/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'gemini',
+          prompt,
+          chunk: text,
+          useTable: false
+        })
+      });
+
+      if (!response.ok) throw new Error("Error en la IA");
+      const data = await response.json();
+      
+      // Clean AI response from markdown blocks if present
+      const cleanJson = data.text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(cleanJson);
+
+      // Map to local supply IDs
+      const mappedIngredients = (parsed.ingredients || []).map((ing: any) => {
+        const supply = supplies.find(s => 
+          s.name.toLowerCase().includes(ing.name.toLowerCase()) || 
+          ing.name.toLowerCase().includes(s.name.toLowerCase())
+        );
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          supplyId: supply ? supply.id : '',
+          quantity: ing.quantity || 0,
+          isFixed: false
+        };
+      });
+
+      setRecipeFormData({
+        name: parsed.name || 'Nueva Receta Dictada',
+        yield: parsed.yield || 1,
+        yieldUnit: parsed.yieldUnit || 'Unidad',
+        laborCost: 0,
+        ingredients: mappedIngredients,
+        equipment: [],
+        type: 'complete',
+        laborMinutes: { heavy: 0, light: 0 },
+        serviceMinutes: { electricity: 0, water: 0, gas: 0, machinery: 0, utensils: 0 },
+        extraCosts: { biosecurity: 0, packaging: 0 }
+      });
+
+      setIsVoiceModalOpen(false);
+      setIsRecipeModalOpen(true);
+      showNotification('Receta dictada procesada correctamente', 'success');
+
+    } catch (e) {
+      console.error("Error dictando receta:", e);
+      showNotification('No pude entender bien la receta. Prueba de nuevo.', 'info');
+    } finally {
+      setIsImporting(false);
+      setImportProgress(0);
+    }
+  };
+
+  const handleGenerateSunatFiles = async (order: Order) => {
+    try {
+      const response = await fetch('/api/sunat/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order, settings })
+      });
+      if (!response.ok) throw new Error("Error en el servidor");
+      const data = await response.json();
+      showNotification(`Archivos SFS generados para ${order.taxData?.documentType === 'factura' ? 'Factura' : 'Boleta'}`, 'success');
+    } catch (e) {
+      console.error(e);
+      showNotification('Error al generar archivos para SUNAT', 'info');
+    }
+  };
 
   // If view is 'admin' or any other popout view, handle them here
   if (view && view !== 'admin') {
@@ -2824,7 +3036,7 @@ export default function App() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Receta Base</label>
               <select
@@ -2850,19 +3062,62 @@ export default function App() {
                 <option value="Tartas">Tartas</option>
                 <option value="Pasteles">Pasteles</option>
                 <option value="Galletas">Galletas</option>
+                <option value="Bocaditos Dulces y Salados">Bocaditos Dulces y Salados</option>
                 <option value="Salados">Salados</option>
                 <option value="Otros">Otros</option>
               </select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Margen Deseado (%)</label>
+              <label className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Precio de Oferta (Opcional)</label>
               <input
                 type="number"
-                value={productFormData.margin}
-                onChange={(e) => setProductFormData({ ...productFormData, margin: parseFloat(e.target.value) })}
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all"
+                value={productFormData.discountPrice || ''}
+                onChange={(e) => setProductFormData({ ...productFormData, discountPrice: parseFloat(e.target.value) || undefined })}
+                placeholder="Ej: 15.50"
+                className="w-full p-4 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 transition-all font-bold text-emerald-700"
               />
+              <p className="text-[10px] text-emerald-600 italic">Si lo llenas, aparecerá como oferta en el catálogo.</p>
             </div>
+
+            <div className="flex flex-col justify-center">
+              <label className="flex items-center gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-100 cursor-pointer hover:bg-amber-100 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={productFormData.isFeatured || false}
+                  onChange={(e) => setProductFormData({ ...productFormData, isFeatured: e.target.checked })}
+                  className="w-5 h-5 accent-amber-500 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-black text-amber-900 uppercase tracking-tighter leading-none">Destacado</p>
+                  <p className="text-[8px] text-amber-700 font-bold uppercase tracking-widest mt-1">Sugerencia del Chef</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-primary">Grupo de Producto (Catálogo)</label>
+            <input
+              type="text"
+              value={productFormData.categoryGroup || ''}
+              onChange={(e) => setProductFormData({ ...productFormData, categoryGroup: e.target.value })}
+              placeholder="Ej: Torta de Chocolate"
+              className="w-full p-4 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary transition-all font-bold"
+            />
+            <p className="text-[10px] text-gray-400 italic">Si varios productos tienen el mismo nombre de grupo, se verán como uno solo en el catálogo web.</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Margen Deseado (%)</label>
+            <input
+              type="number"
+              value={productFormData.margin}
+              onChange={(e) => setProductFormData({ ...productFormData, margin: parseFloat(e.target.value) })}
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all"
+            />
           </div>
 
           <div className="space-y-4">
@@ -3379,6 +3634,13 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Voice Recipe Modal */}
+      <VoiceRecipeModal 
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onProcess={handleVoiceRecipeImport}
+        isProcessing={isImporting}
+      />
       </>
     </ErrorBoundary>
   );

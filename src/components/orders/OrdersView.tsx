@@ -9,7 +9,12 @@ import {
   Trash2, 
   CheckCircle2, 
   Timer,
-  ShoppingCart
+  ShoppingCart,
+  Calendar,
+  FileText,
+  MapPin,
+  Truck,
+  Navigation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GlassCard } from '../shared/GlassCard';
@@ -34,6 +39,7 @@ interface OrdersViewProps {
   isProcessingReceipt: boolean;
   aiCooldown: number;
   formatCurrency: (amount: number) => string;
+  onGenerateSunat: (order: Order) => void;
 }
 
 export const OrdersView = React.memo<OrdersViewProps>(({
@@ -51,7 +57,8 @@ export const OrdersView = React.memo<OrdersViewProps>(({
   onUploadReceipt,
   isProcessingReceipt,
   aiCooldown,
-  formatCurrency
+  formatCurrency,
+  onGenerateSunat
 }) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -61,7 +68,7 @@ export const OrdersView = React.memo<OrdersViewProps>(({
     if (statusFilter === 'all') return true;
     if (statusFilter === 'delivered_paid') return o.status === 'delivered' || o.status === 'delivered_paid';
     return o.status === statusFilter;
-  });
+  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const isAllSelected = filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length;
   const handleToggleAll = () => {
@@ -230,8 +237,44 @@ export const OrdersView = React.memo<OrdersViewProps>(({
                         <User className="w-6 h-6" />
                       </div>
                       <div>
-                        <p className="font-black text-slate-800 leading-tight">{order.customerName}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{order.id} | {new Date(order.date).toLocaleDateString()}</p>
+                        <p className="font-black text-slate-800 leading-tight">
+                          {order.customerName}
+                          {order.source === 'catalog' && (
+                            <span className="ml-2 bg-blue-50 text-blue-500 text-[8px] px-1.5 py-0.5 rounded-md uppercase font-black tracking-tighter">Web</span>
+                          )}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5 flex flex-wrap gap-y-1">
+                          <span>{order.id} | {new Date(order.date).toLocaleDateString()}</span>
+                          {order.deliveryDate && (
+                            <span className="ml-2 text-rose-500 items-center gap-1 inline-flex">
+                              <Calendar className="w-3 h-3" /> Entregar: {new Date(order.deliveryDate).toLocaleDateString()} {order.deliveryTime && `@ ${order.deliveryTime}`}
+                            </span>
+                          )}
+                        </p>
+                        {(order.deliveryAddress || order.deliveryZone || order.gpsLocation) && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {order.deliveryZone && (
+                              <span className="bg-slate-100 text-slate-600 text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest flex items-center gap-1">
+                                <Truck size={8} /> {order.deliveryZone}
+                              </span>
+                            )}
+                            {order.deliveryAddress && (
+                              <span className="bg-amber-50 text-amber-600 text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest flex items-center gap-1">
+                                <MapPin size={8} /> {order.deliveryAddress}
+                              </span>
+                            )}
+                            {order.gpsLocation && (
+                              <a 
+                                href={order.gpsLocation} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="bg-emerald-500 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest flex items-center gap-1 hover:bg-emerald-600 transition-colors"
+                              >
+                                <Navigation size={8} /> Ver GPS
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -250,6 +293,16 @@ export const OrdersView = React.memo<OrdersViewProps>(({
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {order.taxData?.documentType && order.taxData.documentType !== 'nota' && (
+                        <button
+                          onClick={() => onGenerateSunat(order)}
+                          className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-rose-100 flex items-center gap-2"
+                          title="Generar archivos para Facturador SUNAT"
+                        >
+                          <FileText size={16} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">SFS</span>
+                        </button>
+                      )}
                       <button 
                         onClick={() => onEditOrder(order)}
                         className="p-2.5 text-slate-400 hover:text-primary-600 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-slate-100 transition-all"

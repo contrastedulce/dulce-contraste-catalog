@@ -48,9 +48,10 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 3000,
+      allowedHosts: ['customise-lectures-analysis-peripherals.trycloudflare.com', 'nearly-gbp-appraisal-trim.trycloudflare.com', 'localhost', '127.0.0.1', '.trycloudflare.com'],
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: {
-        ignored: ['**/db.json'],
+        ignored: ['**/db.json', '**/src/constants/initialData.ts'],
       },
     },
   };

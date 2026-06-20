@@ -53,7 +53,20 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tipo</label>
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Uso en Catálogo (Crea tu Torta)</label>
+          <select
+            value={recipeFormData.catalogCategory || 'Ninguno'}
+            onChange={(e) => setRecipeFormData({ ...recipeFormData, catalogCategory: e.target.value as any })}
+            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all font-bold"
+          >
+            <option value="Ninguno">No mostrar en "Crea tu Torta"</option>
+            <option value="Base">Como Base (Bizcocho)</option>
+            <option value="Relleno">Como Relleno</option>
+            <option value="Cubierta">Como Cubierta (Frosting/Fudge)</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tipo de Costeo</label>
           <select
             value={recipeFormData.type}
             onChange={(e) => setRecipeFormData({ ...recipeFormData, type: e.target.value as 'sub' | 'complete' })}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, ChefHat, Search, Filter, ClipboardList, Trash2 } from 'lucide-react';
+import { Plus, ChefHat, Search, Filter, ClipboardList, Trash2, Mic } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GlassCard } from '../shared/GlassCard';
 import { Button } from '../shared/Button';
@@ -25,6 +25,7 @@ interface RecipesViewProps {
   getRecipeCost: (recipe: Recipe) => number;
   formatCurrency: (amount: number) => string;
   settings: AppSettings;
+  onVoiceImport: () => void;
 }
 
 export const RecipesView = React.memo<RecipesViewProps>(({
@@ -43,12 +44,15 @@ export const RecipesView = React.memo<RecipesViewProps>(({
   onDeleteBulk,
   getRecipeCost,
   formatCurrency,
-  settings
+  settings,
+  onVoiceImport
 }) => {
-  const filteredRecipes = recipes.filter(r => 
-    (r.name || '').toLowerCase().includes(globalSearch.toLowerCase()) &&
-    r.type === recipeSubTab
-  );
+  const filteredRecipes = recipes
+    .filter(r => 
+      (r.name || '').toLowerCase().includes(globalSearch.toLowerCase()) &&
+      r.type === recipeSubTab
+    )
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   return (
     <div className="space-y-8">
@@ -75,6 +79,14 @@ export const RecipesView = React.memo<RecipesViewProps>(({
               </motion.div>
             )}
           </AnimatePresence>
+          <Button 
+            variant="secondary" 
+            onClick={onVoiceImport}
+            icon={Mic}
+            className="group"
+          >
+            Dictar Receta
+          </Button>
           <Button 
             variant="primary" 
             onClick={onAddRecipe}

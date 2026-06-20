@@ -16,7 +16,11 @@ import {
   MessageCircle,
   Phone,
   Copy,
-  Eye
+  Eye,
+  Truck,
+  MapPin,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { GlassCard } from '../shared/GlassCard';
 import { Button } from '../shared/Button';
@@ -358,90 +362,198 @@ export const SettingsView = React.memo<SettingsViewProps>(({
         </GlassCard>
 
         {/* Public Catalog Settings */}
-        <GlassCard className="p-10 border-none shadow-sm space-y-8" delay={0.5}>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center shadow-sm">
-              <MessageCircle className="w-7 h-7" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Catálogo Público</h3>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Configuración de pedidos por WhatsApp</p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <Input 
-              label="WhatsApp del Negocio" 
-              placeholder="Ej: 51900000000"
-              value={settings.whatsappPhone || ''}
-              onChange={(e) => onUpdateSettings({ ...settings, whatsappPhone: e.target.value })}
-              icon={Phone}
-            />
-
-            <div className="space-y-4">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estado de la Agenda</label>
-              <div className="grid grid-cols-3 gap-3">
-                {(['open', 'limited', 'closed'] as const).map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => onUpdateSettings({ ...settings, agendaStatus: status })}
-                    className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                      (settings.agendaStatus || 'open') === status
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-                        : 'border-gray-100 text-gray-400 hover:border-gray-200'
-                    }`}
-                  >
-                    <div className={`w-3 h-3 rounded-full ${
-                      status === 'open' ? 'bg-emerald-500' : 
-                      status === 'limited' ? 'bg-amber-500' : 'bg-rose-500'
-                    }`} />
-                    <span className="text-[10px] font-black uppercase tracking-tighter text-center">
-                      {status === 'open' ? 'Abierta' : 
-                       status === 'limited' ? 'Limitada' : 'Llena'}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              
-              <div className="space-y-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aviso para Clientes:</p>
-                <input
-                  type="text"
-                  value={settings.agendaMessage || ''}
-                  onChange={(e) => onUpdateSettings({ ...settings, agendaMessage: e.target.value })}
-                  placeholder="Ej: Agenda llena para el fin de semana..."
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-medium"
-                />
-              </div>
-            </div>
-            <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-              <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Tu Link de Catálogo:</p>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <code className="text-xs font-bold text-indigo-800 bg-white/50 px-3 py-2 rounded-xl flex-1 break-all">
-                    {window.location.origin}/?view=catalog
-                  </code>
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/?view=catalog`);
-                      alert('¡Link copiado!');
-                    }}
-                    className="p-3 bg-white text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm border border-indigo-100"
-                  >
-                    <Copy size={18} />
-                  </button>
+        <div className="space-y-8 col-span-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <GlassCard className="p-10 border-none shadow-sm space-y-8" delay={0.5}>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center shadow-sm">
+                  <MessageCircle className="w-7 h-7" />
                 </div>
-                <button 
-                  onClick={() => window.open(`${window.location.origin}/?view=catalog`, '_blank')}
-                  className="w-full bg-indigo-600 text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
-                >
-                  <Eye size={16} />
-                  Ver Mi Catálogo Público
-                </button>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Catálogo Público</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Configuración de pedidos por WhatsApp</p>
+                </div>
               </div>
-            </div>
+
+              <div className="space-y-6">
+                <Input 
+                  label="WhatsApp del Negocio" 
+                  placeholder="Ej: 51900000000"
+                  value={settings.whatsappPhone || ''}
+                  onChange={(e) => onUpdateSettings({ ...settings, whatsappPhone: e.target.value })}
+                  icon={Phone}
+                />
+
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estado de la Agenda</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(['open', 'limited', 'closed'] as const).map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => onUpdateSettings({ ...settings, agendaStatus: status })}
+                        className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                          (settings.agendaStatus || 'open') === status
+                            ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+                            : 'border-gray-100 text-gray-400 hover:border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-3 h-3 rounded-full ${
+                          status === 'open' ? 'bg-emerald-500' : 
+                          status === 'limited' ? 'bg-amber-500' : 'bg-rose-500'
+                        }`} />
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-center">
+                          {status === 'open' ? 'Abierta' : 
+                          status === 'limited' ? 'Limitada' : 'Llena'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aviso para Clientes:</p>
+                    <input
+                      type="text"
+                      value={settings.agendaMessage || ''}
+                      onChange={(e) => onUpdateSettings({ ...settings, agendaMessage: e.target.value })}
+                      placeholder="Ej: Agenda llena para el fin de semana..."
+                      className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-medium"
+                    />
+                  </div>
+                </div>
+                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Tu Link de Catálogo:</p>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs font-bold text-indigo-800 bg-white/50 px-3 py-2 rounded-xl flex-1 break-all">
+                        {window.location.origin}/?view=catalog
+                      </code>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/?view=catalog`);
+                          alert('¡Link copiado!');
+                        }}
+                        className="p-3 bg-white text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm border border-indigo-100"
+                      >
+                        <Copy size={18} />
+                      </button>
+                    </div>
+                    <button 
+                      onClick={() => window.open(`${window.location.origin}/?view=catalog`, '_blank')}
+                      className="w-full bg-indigo-600 text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                    >
+                      <Eye size={16} />
+                      Ver Mi Catálogo Público
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-10 border-none shadow-sm space-y-8" delay={0.6}>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-sm">
+                  <Truck className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Configuración de Delivery</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Gestión de zonas y umbral de envío gratis</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Envío Gratis a partir de (S/)</label>
+                  <input 
+                    type="number"
+                    value={settings.freeDeliveryThreshold || ''}
+                    onChange={(e) => onUpdateSettings({ ...settings, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })}
+                    placeholder="Ej: 150"
+                    className="w-full px-5 py-4 bg-emerald-50/30 border-none rounded-2xl font-black text-emerald-700 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                  <p className="text-[10px] text-emerald-600 italic mt-2 ml-1">Deja en 0 si no ofreces envío gratis.</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Zonas de Entrega</label>
+                    <button 
+                      onClick={() => {
+                        const zones = settings.deliveryZones || [];
+                        onUpdateSettings({ 
+                          ...settings, 
+                          deliveryZones: [...zones, { name: 'Nueva Zona', cost: 0 }] 
+                        });
+                      }}
+                      className="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> Añadir Zona
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(settings.deliveryZones || []).length === 0 ? (
+                      <div className="text-center p-8 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                        <p className="text-xs font-bold text-slate-400">No hay zonas configuradas</p>
+                      </div>
+                    ) : (
+                      (settings.deliveryZones || []).map((zone, idx) => (
+                        <div key={idx} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm group space-y-3">
+                          <div className="flex gap-2 items-center">
+                            <MapPin size={16} className="text-slate-300" />
+                            <input 
+                              type="text"
+                              value={zone.name}
+                              onChange={(e) => {
+                                const zones = [...settings.deliveryZones];
+                                zones[idx].name = e.target.value;
+                                onUpdateSettings({ ...settings, deliveryZones: zones });
+                              }}
+                              className="flex-1 bg-transparent border-none text-xs font-black text-slate-700 focus:ring-0 p-0 uppercase tracking-widest"
+                              placeholder="Nombre de la ruta"
+                            />
+                            <div className="flex items-center bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                              <span className="text-[10px] font-black text-slate-400 mr-1">S/</span>
+                              <input 
+                                type="number"
+                                value={zone.cost}
+                                onChange={(e) => {
+                                  const zones = [...settings.deliveryZones];
+                                  zones[idx].cost = parseFloat(e.target.value) || 0;
+                                  onUpdateSettings({ ...settings, deliveryZones: zones });
+                                }}
+                                className="w-12 bg-transparent border-none text-xs font-black text-slate-700 focus:ring-0 p-0"
+                              />
+                            </div>
+                            <button 
+                              onClick={() => {
+                                const zones = settings.deliveryZones.filter((_, i) => i !== idx);
+                                onUpdateSettings({ ...settings, deliveryZones: zones });
+                              }}
+                              className="p-2 text-rose-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                          <input 
+                            type="text"
+                            value={zone.description || ''}
+                            onChange={(e) => {
+                              const zones = [...settings.deliveryZones];
+                              zones[idx].description = e.target.value;
+                              onUpdateSettings({ ...settings, deliveryZones: zones });
+                            }}
+                            className="w-full bg-slate-50/50 border-none text-[10px] font-medium text-slate-500 focus:ring-0 px-3 py-2 rounded-xl italic"
+                            placeholder="Urb. Angamos, Santa Isabel, El Chilcal..."
+                          />
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
           </div>
-        </GlassCard>
+        </div>
       </div>
     </div>
   );

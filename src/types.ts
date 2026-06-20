@@ -21,6 +21,7 @@ export interface Equipment {
 }
 
 export interface RecipeIngredient {
+  id?: string;
   supplyId?: string;
   recipeId?: string; // For sub-recipes
   quantity: number;
@@ -73,6 +74,7 @@ export interface Recipe {
   yieldUnit: string; // e.g., "gr", "kg", "unidades"
   totalCost?: number;
   costPerPortion?: number;
+  catalogCategory?: 'Base' | 'Relleno' | 'Cubierta' | 'Ninguno';
 }
 
 export interface Product {
@@ -95,6 +97,10 @@ export interface Product {
   description?: string;
   tags?: string[];
   category?: string;
+  categoryGroup?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  discountPrice?: number;
 }
 
 export interface Order {
@@ -108,7 +114,19 @@ export interface Order {
   }[];
   status: 'pending' | 'preparing' | 'delivered' | 'delivered_credit' | 'delivered_paid';
   date: string;
+  deliveryDate?: string; // ISO date
+  deliveryTime?: string;
+  deliveryAddress?: string;
+  deliveryZone?: string;
+  gpsLocation?: string;
+  taxData?: {
+    documentType: 'nota' | 'boleta' | 'factura';
+    documentNumber: string;
+    businessName?: string;
+  };
   total: number;
+  notes?: string;
+  source?: 'admin' | 'catalog';
 }
 
 export interface AppSettings {
@@ -119,6 +137,8 @@ export interface AppSettings {
   whatsappPhone?: string;
   agendaStatus?: 'open' | 'limited' | 'closed';
   agendaMessage?: string;
+  deliveryZones: { name: string; cost: number; description?: string }[];
+  freeDeliveryThreshold?: number;
   masterCosts: MasterCosts;
 }
 

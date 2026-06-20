@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
+import { exec } from "child_process";
 import dotenv from "dotenv";
 import os from "os";
 
@@ -108,6 +109,16 @@ async function startServer() {
 
   const saveDb = () => {
     fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+    
+    // Auto-sync to catalog and push to GitHub
+    console.log("🚀 Iniciando auto-sincronización con GitHub...");
+    exec("node sync-data.cjs && git add . && git commit -m \"Auto-update catalog data\" && git push", (error, stdout, stderr) => {
+      if (error) {
+        console.error(`❌ Error en auto-sincronización: ${error.message}`);
+        return;
+      }
+      console.log("✅ Catálogo actualizado y subido a GitHub automáticamente.");
+    });
   };
 
 // Unified AI Configuration & Rotation
@@ -167,14 +178,17 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
         const errorStatus = error.status || error.code || 0;
         const errorDetails = JSON.stringify(error);
         
-        const is429 = errorStatus === 429 || 
-                      errorStatus === 'RESOURCE_EXHAUSTED' || 
-                      errorMsg.includes('429') || 
-                      errorDetails.toLowerCase().includes('quota');
+        const isRetryable = errorStatus === 429 || 
+                          errorStatus === 503 ||
+                          errorStatus === 500 ||
+                          errorStatus === 'RESOURCE_EXHAUSTED' || 
+                          errorMsg.includes('429') || 
+                          errorMsg.includes('503') ||
+                          errorDetails.toLowerCase().includes('quota');
 
         console.error(`[AI Error] Key ${currentKeyIndex % keys.length} | Model: ${modelName} | Status: ${errorStatus}`);
 
-        if (is429) {
+        if (isRetryable) {
           if (modelName !== MODELS_TO_TRY[MODELS_TO_TRY.length - 1]) continue;
           break; // Next key
         }
@@ -268,6 +282,67 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
       res.json({ status: "ok" });
     } catch (e) {
       res.status(500).json({ error: "Error al sincronizar" });
+    }
+  });
+
+  // Public Order Capture from Catalog
+  app.post("/api/public/orders", (req, res) => {
+    try {
+      const order = req.body;
+      if (!order.customerName || !order.items) {
+        return res.status(400).json({ error: "Datos de pedido incompletos" });
+      }
+
+      const newOrder = {
+        ...order,
+        id: Math.random().toString(36).substr(2, 9),
+        status: 'pending',
+        date: new Date().toISOString(),
+        source: 'catalog'
+      };
+
+      db.orders.push(newOrder);
+      saveDb();
+      
+      res.json({ 
+        status: "ok", 
+        orderId: newOrder.id,
+        message: "Pedido registrado correctamente en el sistema." 
+      });
+    } catch (e) {
+      console.error("Error receiving public order:", e);
+      res.status(500).json({ error: "Error interno al procesar el pedido" });
+    }
+  });
+
+  app.post("/api/sunat/generate", async (req, res) => {
+    const { order, settings } = req.body;
+    if (!order || !order.taxData) {
+      return res.status(400).json({ error: "Datos de pedido insuficientes" });
+    }
+
+    try {
+      const sunatDir = path.join(process.cwd(), 'SUNAT_DATA');
+      if (!fs.existsSync(sunatDir)) fs.mkdirSync(sunatDir);
+
+      const docType = order.taxData.documentType === 'factura' ? '01' : '03';
+      const serie = order.taxData.documentType === 'factura' ? 'F001' : 'B001';
+      const fileName = `${docType}-${serie}-${order.id}`;
+      
+      // Header (.cab)
+      const cabContent = `0101|${order.date}|PEN|${order.taxData.documentNumber}|${order.customerName}|${order.total}|0|0|${order.total}|`;
+      fs.writeFileSync(path.join(sunatDir, `${fileName}.cab`), cabContent);
+
+      // Detail (.det)
+      const detContent = order.items.map((item: any) => {
+        return `NIU|${item.quantity}|${item.productId}|${item.productName || item.formatName}|${item.price}|0|${item.price * item.quantity}|`;
+      }).join('\n');
+      fs.writeFileSync(path.join(sunatDir, `${fileName}.det`), detContent);
+
+      res.json({ message: "Archivos generados en SUNAT_DATA", path: sunatDir });
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: "Error generando archivos" });
     }
   });
 
