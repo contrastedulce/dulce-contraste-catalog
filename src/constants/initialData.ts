@@ -4937,7 +4937,7 @@ export const INITIAL_RECIPES: Recipe[] = [
   {
     "id": "w2rmqhwkn",
     "name": "Tiramisú 2",
-    "type": "sub",
+    "type": "complete",
     "ingredients": [
       {
         "quantity": 6,
