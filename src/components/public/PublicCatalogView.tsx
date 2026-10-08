@@ -308,7 +308,7 @@ Pedido generado desde el catálogo web.`;
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="group bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100"
+        className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-slate-100"
       >
         <div className="flex flex-col md:flex-row h-full">
           {/* Image Section */}
@@ -590,7 +590,7 @@ Pedido generado desde el catálogo web.`;
                   </div>
                 </div>
 
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 md:p-12 min-h-[400px] flex flex-col">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 min-h-100 flex flex-col">
                   <AnimatePresence mode="wait">
                     {activeStep === 0 && (
                       <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="grid grid-cols-1 gap-3">
@@ -710,7 +710,7 @@ Pedido generado desde el catálogo web.`;
                 ) : (
                   <>
                     {settings.freeDeliveryThreshold && settings.freeDeliveryThreshold > 0 && (
-                      <div className="bg-emerald-50 p-5 rounded-[24px] border border-emerald-100">
+                      <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2 text-emerald-700 font-black text-[9px] uppercase tracking-widest">
                             <Truck size={12} />
@@ -740,7 +740,7 @@ Pedido generado desde el catálogo web.`;
                           </div>
                           <div className="flex items-center gap-3 bg-slate-100 px-3 py-1 rounded-xl h-fit self-center">
                             <button onClick={() => updateQuantity(item.productId, item.formatName, -1)} className="text-slate-400 hover:text-rose-500"><Minus size={12} /></button>
-                            <span className="font-black text-slate-800 min-w-[16px] text-center text-sm">{item.quantity}</span>
+                            <span className="font-black text-slate-800 min-w-4 text-center text-sm">{item.quantity}</span>
                             <button onClick={() => updateQuantity(item.productId, item.formatName, 1)} className="text-slate-400 hover:text-rose-500"><Plus size={12} /></button>
                           </div>
                         </div>

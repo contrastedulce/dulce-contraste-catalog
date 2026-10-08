@@ -17,6 +17,8 @@ import { Badge } from '../shared/Badge';
 import { cn } from '../../lib/utils';
 import { Supply } from '../../types';
 
+import Fuse from 'fuse.js';
+
 interface InventoryViewProps {
   supplies: Supply[];
   globalSearch: string;
@@ -59,19 +61,38 @@ export const InventoryView = React.memo<InventoryViewProps>(({
 
   const searchTerm = localSearch || globalSearch;
 
+  // Initialize Fuse instance
+  const fuse = useMemo(() => {
+    return new Fuse(supplies, {
+      keys: ['name', 'category'],
+      threshold: 0.35, // Allows moderate typo tolerance
+      distance: 100,
+      ignoreLocation: true
+    });
+  }, [supplies]);
+
   const filteredSupplies = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return supplies
-      .filter(s => {
-        const matchesSearch = !term || (s.name || '').toLowerCase().includes(term) || 
-                             (s.category || '').toLowerCase().includes(term);
-        const matchesFilter = inventoryFilter === 'all' || s.stock <= s.minStock;
-        return matchesSearch && matchesFilter;
-      })
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  }, [supplies, searchTerm, inventoryFilter]);
+    let result = supplies;
+    const isSearching = searchTerm.trim() !== '';
+    
+    if (isSearching) {
+      result = fuse.search(searchTerm).map(res => res.item);
+    }
+
+    const filtered = result.filter(s => {
+      return inventoryFilter === 'all' || s.stock <= s.minStock;
+    });
+
+    // If searching, keep Fuse's relevance sorting. Otherwise, sort alphabetically.
+    if (isSearching) {
+      return filtered;
+    }
+
+    return [...filtered].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [supplies, searchTerm, inventoryFilter, fuse]);
 
   const visibleSupplies = filteredSupplies.slice(0, visibleCount);
+
   const hasMore = filteredSupplies.length > visibleCount;
 
 

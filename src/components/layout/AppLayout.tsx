@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
+import { cn } from '../../lib/utils';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -44,7 +45,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           onNewOrder={onNewOrder}
         />
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar relative z-10 no-scrollbar">
+        <div className={cn(
+          "flex-1 overflow-y-auto custom-scrollbar relative z-10 no-scrollbar",
+          activeTab === 'recipes' ? "p-3 sm:p-4 md:p-6" : "p-6 md:p-8"
+        )}>
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={activeTab}
@@ -52,7 +56,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="max-w-7xl mx-auto w-full h-full"
+              className={cn(
+                "w-full h-full",
+                activeTab === 'recipes' ? "max-w-none px-0" : "max-w-[1600px] mx-auto"
+              )}
             >
               {children}
             </motion.div>

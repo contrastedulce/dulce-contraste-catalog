@@ -1,12 +1,15 @@
-import express from "express"; // Server restart forced - final database sync
+import express from "express"; // Server restart forced: cake de manzana y subrecetas sync v2
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import { GoogleGenAI } from "@google/genai";
-import { exec } from "child_process";
+import { exec, execSync } from "child_process";
 import dotenv from "dotenv";
 import os from "os";
+
+
 
 dotenv.config({ override: true });
 
@@ -107,23 +110,126 @@ async function startServer() {
     }
   }
 
-  const saveDb = () => {
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
-    
-    // Auto-sync to catalog and push to GitHub
-    console.log("🚀 Iniciando auto-sincronización con GitHub...");
-    exec("node sync-data.cjs && git add . && git commit -m \"Auto-update catalog data\" && git push", (error, stdout, stderr) => {
-      if (error) {
-        console.error(`❌ Error en auto-sincronización: ${error.message}`);
+  const getGitCommand = (): string => {
+    try {
+      execSync("git --version", { stdio: 'ignore' });
+      return "git";
+    } catch (e) {
+      const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
+      const githubDesktopPath = path.join(localAppData, 'GitHubDesktop');
+      if (fs.existsSync(githubDesktopPath)) {
+        try {
+          const apps = fs.readdirSync(githubDesktopPath).filter(f => f.startsWith('app-'));
+          apps.sort((a, b) => b.localeCompare(a, undefined, { numeric: true, sensitivity: 'base' }));
+          if (apps.length > 0) {
+            const gitPath = path.join(githubDesktopPath, apps[0], 'resources', 'app', 'git', 'cmd', 'git.exe');
+            if (fs.existsSync(gitPath)) {
+              return `"${gitPath}"`;
+            }
+          }
+        } catch (err) {
+          console.error("Error detecting GitHub Desktop git:", err);
+        }
+      }
+    }
+    return "git";
+  };
+
+  // ============================================================
+  //  PUBLICACIÓN DEL CATÁLOGO EN GITHUB (silenciosa)
+  //  - NUNCA abre ventanas de Git Credential Manager ni pide usuario/contraseña
+  //  - Solo publica el archivo generado del catálogo, no todo el proyecto
+  //  - Espera un tiempo mínimo entre publicaciones para no saturar el historial
+  //  Se puede desactivar por completo con la variable DISABLE_GIT_SYNC=1
+  // ============================================================
+  const CATALOGO_ARCHIVO = path.join('src', 'constants', 'initialData.ts');
+  const INTERVALO_MINIMO_PUBLICACION = 2 * 60 * 1000; // 2 minutos
+  const PUBLICACION_ACTIVA = process.env.DISABLE_GIT_SYNC !== '1';
+
+  const ENV_GIT_SILENCIOSO: NodeJS.ProcessEnv = {
+    ...process.env,
+    GIT_TERMINAL_PROMPT: '0',   // Jamás pedir credenciales por consola
+    GCM_INTERACTIVE: 'never',   // Jamás abrir la ventana de Git Credential Manager
+    GCM_GUI_PROMPT: 'false',
+    GIT_ASKPASS: 'echo',
+    SSH_ASKPASS: 'echo',
+    VS_GIT_CREDENTIAL_PROMPT: 'never'
+  };
+
+  let publicando = false;
+  let publicacionPendiente = false;
+  let ultimaPublicacion = 0;
+  let temporizadorPublicacion: NodeJS.Timeout | null = null;
+
+  const publicarCatalogo = () => {
+    if (!PUBLICACION_ACTIVA) return;
+
+    if (publicando) {
+      publicacionPendiente = true; // se reintenta al terminar la actual
+      return;
+    }
+
+    const desdeUltima = Date.now() - ultimaPublicacion;
+    if (desdeUltima < INTERVALO_MINIMO_PUBLICACION) {
+      // Todavía es muy pronto: se agenda para el final del intervalo
+      if (!temporizadorPublicacion) {
+        temporizadorPublicacion = setTimeout(() => {
+          temporizadorPublicacion = null;
+          publicarCatalogo();
+        }, INTERVALO_MINIMO_PUBLICACION - desdeUltima);
+      }
+      return;
+    }
+
+    publicando = true;
+    ultimaPublicacion = Date.now();
+    const gitCmd = getGitCommand();
+
+    exec('node sync-data.cjs', { env: ENV_GIT_SILENCIOSO, windowsHide: true }, (syncErr) => {
+      if (syncErr) {
+        console.error(`⚠️ No se pudo generar el catálogo: ${syncErr.message}`);
+        publicando = false;
         return;
       }
-      console.log("✅ Catálogo actualizado y subido a GitHub automáticamente.");
+
+      // Solo se revisa el archivo del catálogo, no todo el proyecto
+      exec(`${gitCmd} status --porcelain -- "${CATALOGO_ARCHIVO}"`, { env: ENV_GIT_SILENCIOSO, windowsHide: true }, (statusErr, stdout) => {
+        if (statusErr || !stdout.trim()) {
+          console.log('ℹ️ Catálogo sin cambios: no hay nada que publicar.');
+          publicando = false;
+          return;
+        }
+
+        const commitYpush =
+          `${gitCmd} add "${CATALOGO_ARCHIVO}" && ` +
+          `${gitCmd} commit -m "Auto-update catalog data" && ` +
+          `${gitCmd} push`;
+
+        exec(commitYpush, { env: ENV_GIT_SILENCIOSO, windowsHide: true, timeout: 120000 }, (error, _stdout, stderr) => {
+          if (error) {
+            // Falla en silencio: NO se abre ninguna ventana ni se interrumpe la app.
+            console.warn(`⚠️ Catálogo no publicado (revisa las credenciales de GitHub): ${(stderr || error.message || '').toString().split('\n')[0]}`);
+          } else {
+            console.log('✅ Catálogo publicado en GitHub correctamente.');
+          }
+          publicando = false;
+          if (publicacionPendiente) {
+            publicacionPendiente = false;
+            publicarCatalogo();
+          }
+        });
+      });
     });
+  };
+
+  const saveDb = () => {
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+    publicarCatalogo();
   };
 
 // Unified AI Configuration & Rotation
 let currentKeyIndex = 0;
-const MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-flash-latest", "gemini-1.5-flash", "gemini-pro"];
+const MODELS_TO_TRY = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-1.5-flash", "gemini-pro"];
 const SYSTEM_INSTRUCTION = "Eres un experto en extracción de datos de pastelería. Genera ÚNICAMENTE la respuesta solicitada. IMPORTANTE: Sé conciso y directo. Si se pide JSON, genera ÚNICAMENTE un JSON válido.";
 
 async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
@@ -178,12 +284,14 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
         const errorStatus = error.status || error.code || 0;
         const errorDetails = JSON.stringify(error);
         
-        const isRetryable = errorStatus === 429 || 
+        const isRetryable = errorStatus === 429 ||
                           errorStatus === 503 ||
                           errorStatus === 500 ||
-                          errorStatus === 'RESOURCE_EXHAUSTED' || 
-                          errorMsg.includes('429') || 
+                          errorStatus === 404 ||
+                          errorStatus === 'RESOURCE_EXHAUSTED' ||
+                          errorMsg.includes('429') ||
                           errorMsg.includes('503') ||
+                          errorMsg.includes('404') ||
                           errorDetails.toLowerCase().includes('quota');
 
         console.error(`[AI Error] Key ${currentKeyIndex % keys.length} | Model: ${modelName} | Status: ${errorStatus}`);
@@ -272,6 +380,13 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
 
   // DB Sync Routes
   app.get("/api/db", (req, res) => {
+    try {
+      if (fs.existsSync(DB_FILE)) {
+        db = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
+      }
+    } catch (e) {
+      console.error("Error reading fresh db file:", e);
+    }
     res.json(db);
   });
 
@@ -345,6 +460,26 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
       res.status(500).json({ error: "Error generando archivos" });
     }
   });
+
+  // List all original recipe PDFs
+  app.get("/api/recipes/pdfs", (req, res) => {
+    try {
+      const folderPath = path.join(process.cwd(), "recetas_originales");
+      if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath);
+      }
+      const files = fs.readdirSync(folderPath).filter(file => file.toLowerCase().endsWith('.pdf'));
+      res.json(files);
+    } catch (e) {
+      console.error("Error listing PDFs:", e);
+      res.status(500).json({ error: "Error reading original recipes folder" });
+    }
+  });
+
+  // Serve original recipe PDFs statically
+  app.use("/api/recipes/pdf-file", express.static(path.join(process.cwd(), "recetas_originales")));
+
+
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

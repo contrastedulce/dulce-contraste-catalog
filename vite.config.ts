@@ -14,7 +14,10 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         devOptions: {
-          enabled: true
+          enabled: false
+        },
+        workbox: {
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
         },
         manifest: {
           name: 'Dulce Contraste Premium',

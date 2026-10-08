@@ -157,15 +157,20 @@ export const ToolkitView = React.memo<ToolkitViewProps>(({
             <div className="p-10 bg-linear-to-br from-primary-500 to-primary-600 rounded-4xl text-center shadow-xl shadow-primary-600/20 relative overflow-hidden group">
               <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-3 relative z-10">Resultado Estimado</p>
               <p className="text-5xl font-black text-white tabular-nums relative z-10">
-                {(unitConverter.value * (
-                  unitConverter.from === 'kg' && unitConverter.to === 'g' ? 1000 :
-                  unitConverter.from === 'g' && unitConverter.to === 'kg' ? 0.001 :
-                  unitConverter.from === 'l' && unitConverter.to === 'ml' ? 1000 :
-                  unitConverter.from === 'ml' && unitConverter.to === 'l' ? 0.001 :
-                  unitConverter.from === 'taza' && unitConverter.to === 'ml' ? 250 :
-                  unitConverter.from === 'ml' && unitConverter.to === 'taza' ? 1/250 :
-                  1
-                )).toFixed(2)} <span className="text-2xl opacity-60 ml-1">{unitConverter.to}</span>
+                {(() => {
+                  const toBase: Record<string, number> = {
+                    kg: 1000,
+                    g: 1,
+                    l: 1000,
+                    ml: 1,
+                    taza: 250,
+                    cda: 15
+                  };
+                  const fromFactor = toBase[unitConverter.from] || 1;
+                  const toFactor = toBase[unitConverter.to] || 1;
+                  const result = unitConverter.value * (fromFactor / toFactor);
+                  return result.toFixed(2);
+                })()} <span className="text-2xl opacity-60 ml-1">{unitConverter.to}</span>
               </p>
               <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
             </div>

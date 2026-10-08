@@ -1,6 +1,50 @@
 node_modules
 dist
+dev-dist
 .env
 .DS_Store
 *.local
 db.json
+temp_repo/
+
+# Respaldo del repositorio danado (1.2 GB) - nunca publicar
+.git_danado_2026/
+.git_*/
+
+# ============================================================
+#  NO PUBLICAR: datos de negocio, respaldos y archivos de trabajo
+#  Este repositorio es PUBLICO (GitHub Pages). Todo lo de abajo
+#  se queda solo en tu computadora.
+# ============================================================
+
+# Respaldos de la base de datos (contienen datos de tu negocio)
+db.bak.json
+db.bak2.json
+db.bak3.json
+db.backup_final.json
+
+# Recetarios y extracciones de texto
+recetario.txt
+recetario.txt.bak
+extraccion_recetas_pdf.txt
+
+# PDFs originales de recetas (682 MB - no se necesitan para el catalogo web)
+recetas_originales/
+
+# Scripts y archivos temporales de trabajo
+_*.cjs
+_*.json
+_*.jsonl
+_*.txt
+_*.log
+scratch_*
+importar_*.cjs
+fix_commas.cjs
+fix_inebook.cjs
+remove_ebook.cjs
+update_excel.cjs
+list_models_v2.cjs
+
+# Logs
+error.log
+*.log

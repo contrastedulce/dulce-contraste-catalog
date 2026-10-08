@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  Download, 
-  Upload, 
-  RotateCcw, 
-  Palette, 
+import {
+  Download,
+  Upload,
+  RotateCcw,
+  Palette,
   Shield,
   Calculator,
   Clock,
@@ -20,7 +20,8 @@ import {
   Truck,
   MapPin,
   Plus,
-  Trash2
+  Trash2,
+  Globe
 } from 'lucide-react';
 import { GlassCard } from '../shared/GlassCard';
 import { Button } from '../shared/Button';
@@ -420,32 +421,118 @@ export const SettingsView = React.memo<SettingsViewProps>(({
                     />
                   </div>
                 </div>
-                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Tu Link de Catálogo:</p>
-                  <div className="flex flex-col gap-3">
+                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 space-y-4">
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Links de Tu Catálogo:</p>
+
+                  {/* Local link */}
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider">🌐 Local (Red Interna)</span>
                     <div className="flex items-center gap-2">
-                      <code className="text-xs font-bold text-indigo-800 bg-white/50 px-3 py-2 rounded-xl flex-1 break-all">
+                      <code className="text-[11px] font-bold text-indigo-800 bg-white/50 px-3 py-2 rounded-xl flex-1 break-all">
                         {window.location.origin}/?view=catalog
                       </code>
-                      <button 
+                      <button
                         onClick={() => {
                           navigator.clipboard.writeText(`${window.location.origin}/?view=catalog`);
                           alert('¡Link copiado!');
                         }}
-                        className="p-3 bg-white text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm border border-indigo-100"
+                        className="p-2.5 bg-white text-indigo-500 rounded-xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm border border-indigo-100"
                       >
-                        <Copy size={18} />
+                        <Copy size={16} />
                       </button>
                     </div>
-                    <button 
-                      onClick={() => window.open(`${window.location.origin}/?view=catalog`, '_blank')}
-                      className="w-full bg-indigo-600 text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                  </div>
+
+                  {/* Production link */}
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                      <Globe size={10} /> Producción (Clientes)
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <code className="text-[11px] font-bold text-emerald-800 bg-emerald-50/50 px-3 py-2 rounded-xl flex-1 break-all border border-emerald-100">
+                        https://contrastedulce.github.io/dulce-contraste-catalog/
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText('https://contrastedulce.github.io/dulce-contraste-catalog/');
+                          alert('¡Link copiado!');
+                        }}
+                        className="p-2.5 bg-white text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm border border-emerald-100"
+                      >
+                        <Copy size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => window.open('https://contrastedulce.github.io/dulce-contraste-catalog/', '_blank')}
+                    className="w-full bg-indigo-600 text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                  >
+                    <Eye size={16} />
+                    Ver Mi Catálogo Público
+                  </button>
+                </div>
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-10 border-none shadow-sm space-y-8" delay={0.5}>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center shadow-sm">
+                  <Palette className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Colores por Profesor</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Distingue las recetas de cada profesor con un color</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {(settings.professorColors || []).map((prof, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                    <input
+                      type="color"
+                      value={prof.color}
+                      onChange={(e) => {
+                        const list = [...(settings.professorColors || [])];
+                        list[idx] = { ...list[idx], color: e.target.value };
+                        onUpdateSettings({ ...settings, professorColors: list });
+                      }}
+                      className="w-10 h-10 rounded-lg cursor-pointer border border-slate-200 bg-white p-1"
+                      title="Cambiar color"
+                    />
+                    <input
+                      type="text"
+                      value={prof.name}
+                      onChange={(e) => {
+                        const list = [...(settings.professorColors || [])];
+                        list[idx] = { ...list[idx], name: e.target.value };
+                        onUpdateSettings({ ...settings, professorColors: list });
+                      }}
+                      className="flex-1 p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-purple-500/20 transition-all"
+                    />
+                    <button
+                      onClick={() => {
+                        const list = (settings.professorColors || []).filter((_, i) => i !== idx);
+                        onUpdateSettings({ ...settings, professorColors: list });
+                      }}
+                      className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                      title="Eliminar profesor"
                     >
-                      <Eye size={16} />
-                      Ver Mi Catálogo Público
+                      <Trash2 size={16} />
                     </button>
                   </div>
-                </div>
+                ))}
+
+                <button
+                  onClick={() => {
+                    const list = [...(settings.professorColors || []), { name: 'Nuevo Profesor', color: '#64748b' }];
+                    onUpdateSettings({ ...settings, professorColors: list });
+                  }}
+                  className="w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-purple-600 bg-purple-50 hover:bg-purple-100 transition-all flex items-center justify-center gap-2 border-2 border-dashed border-purple-200"
+                >
+                  <Plus size={14} />
+                  Agregar Profesor
+                </button>
               </div>
             </GlassCard>
 

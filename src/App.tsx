@@ -32,7 +32,7 @@ import { cn } from './lib/utils';
 import { Badge } from './components/shared/Badge';
 import { SearchableSelect } from './components/shared/SearchableSelect';
 import { processGastroData, processPurchaseReceipt, processSalesReceipt } from './services/GastroService';
-import { Supply, Order, Equipment, Recipe, Product, AppSettings, FinanceSummary, Quote, Purchase, PurchaseItem, SupplierMapping, Customer } from './types';
+import { Supply, Order, Equipment, Recipe, Product, AppSettings, FinanceSummary, Quote, Purchase, PurchaseItem, SupplierMapping, Customer, IngredientMapping } from './types';
 
 // New Modular Components
 import { AppLayout } from './components/layout/AppLayout';
@@ -50,8 +50,10 @@ import { SettingsView } from './components/settings/SettingsView';
 import { CustomersView } from './components/customers/CustomersView';
 import { ShoppingListView } from './components/shopping/ShoppingListView';
 import { INITIAL_PRODUCTS, INITIAL_SETTINGS, INITIAL_RECIPES } from './constants/initialData';
+import { PDF_RECIPES, PDF_SUPPLIES } from './constants/pdfRecipes';
 import { PublicCatalogView } from './components/public/PublicCatalogView';
 import { VoiceRecipeModal } from './components/recipes/VoiceRecipeModal';
+import { ExcelImportModal } from './components/recipes/ExcelImportModal';
 import { createSyncChannel } from './lib/windowSync';
 import { RecipeForm } from './components/recipes/RecipeForm';
 import { OrderForm } from './components/orders/OrderForm';
@@ -187,12 +189,13 @@ export default function App() {
   const [inventoryFilter, setInventoryFilter] = useState<'all' | 'critical'>('all');
   const [orders, setOrders] = useState<Order[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
-  const [recipes, setRecipes] = useState<Recipe[]>(INITIAL_RECIPES);
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [recipes, setRecipes] = useState<Recipe[]>(import.meta.env.PROD ? INITIAL_RECIPES : []);
+  const [products, setProducts] = useState<Product[]>(import.meta.env.PROD ? INITIAL_PRODUCTS : []);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
   const [voiceText, setVoiceText] = useState('');
   const [importText, setImportText] = useState('');
   const [importProgress, setImportProgress] = useState(0);
@@ -214,7 +217,8 @@ export default function App() {
     purchasePrice: 0,
     usefulLifeYears: 5,
     maintenanceCostMonthly: 0,
-    operatingHoursMonthly: 160
+    operatingHoursMonthly: 160,
+    powerWatts: 0
   });
 
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
@@ -279,13 +283,23 @@ export default function App() {
     date: new Date().toISOString().split('T')[0],
     items: [],
     total: 0,
-    notes: ''
+    notes: '',
+    city: 'Piura',
+    deliveryDate: '',
+    deliveryTime: '',
+    validUntil: '',
+    deliveryWindow: '10 am a 12 pm',
+    discountEnabled: false,
+    discountLabel: 'Descuento especial corporativo',
+    discountPercent: 8,
+    terms: []
   });
   const [quoteItemForm, setQuoteItemForm] = useState({ productId: '', formatName: '', quantity: 1 });
 
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [mappings, setMappings] = useState<SupplierMapping[]>([]);
+  const [ingredientMappings, setIngredientMappings] = useState<IngredientMapping[]>([]);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
   const [aiCooldown, setAiCooldown] = useState(0);
@@ -411,9 +425,9 @@ export default function App() {
         } else {
           // 3. Fallback to Initial Samples if everything is empty
           const sampleSupplies = [
-            { id: '1', name: 'Harina 0000', unit: 'kg', cost: 850, category: 'Secos', stock: 5, minStock: 10 },
-            { id: '2', name: 'Manteca', unit: 'kg', cost: 4500, category: 'Lácteos', stock: 12, minStock: 5 },
-            { id: '3', name: 'Azúcar', unit: 'kg', cost: 900, category: 'Secos', stock: 2, minStock: 5 },
+            { id: '1', name: 'Harina 0000', unit: 'kg', cost: 850, category: 'Secos' as const, stock: 5, minStock: 10 },
+            { id: '2', name: 'Manteca', unit: 'kg', cost: 4500, category: 'Lácteos' as const, stock: 12, minStock: 5 },
+            { id: '3', name: 'Azúcar', unit: 'kg', cost: 900, category: 'Secos' as const, stock: 2, minStock: 5 },
           ];
           setSupplies(sampleSupplies);
           // Initial sync for first launch
@@ -432,6 +446,30 @@ export default function App() {
 
     syncData();
   }, []);
+
+  // Dynamic migration for PDF Recipes
+  // Dynamic migration for PDF Recipes (Desactivado para permitir eliminar recetas sin que se reinyecten)
+  useEffect(() => {
+    // Migración inicial completada en db.json
+  }, []);
+
+  // Persistent ingredient mappings for AI auto-complete and conversions
+  useEffect(() => {
+    const saved = localStorage.getItem('bakery-ingredient-mappings');
+    if (saved) {
+      try {
+        setIngredientMappings(JSON.parse(saved));
+      } catch (e) {
+        console.error("Error loading ingredient mappings", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem('bakery-ingredient-mappings', JSON.stringify(ingredientMappings));
+    }
+  }, [ingredientMappings, loading]);
 
   // Request browser notification permission (Admin only)
   useEffect(() => {
@@ -1094,45 +1132,40 @@ export default function App() {
           }
         };
       } else if (activeTab === 'recipes') {
-        prompt = `Analiza el siguiente texto y extrae las recetas de pastelería presentes.
-        Identifica si hay sub-recetas (ej: rellenos, coberturas, cremas, masas base) y la receta principal (la completa).
+        prompt = `Analiza el siguiente texto y extrae TODAS las recetas de pastelería presentes.
+        DETECCIÓN DE SUB-RECETAS (MUY IMPORTANTE):
+        Para CADA receta, identifica si contiene sub-secciones o componentes (ejemplos: "Masa de pie", "Relleno de pecanas", "Para la Masa", "Para la Mermelada", "Frosting", "Bizcocho", "Almíbar", "Crema pastelera", etc.).
 
-        Para cada receta extrae:
-        - nombre
-        - tipo: 'sub' (si es un componente o base) o 'complete' (si es el producto final)
-        - ingredientes (nombre y cantidad en la unidad base)
-        - equipo necesario (nombre y horas de uso)
-        - costo de mano de obra
-        - rendimiento (porciones)
+        Si detectas sub-secciones, crea una sub-receta independiente para cada una en el array "subRecipes". Cada sub-receta debe tener su propio "name", sus "ingredients" y sus "instructions".
+        En "name" general coloca el nombre de la receta completa (ej: "PECAN PIE").
+        En "ingredients" (nivel raíz) coloca cualquier ingrediente directo que no pertenezca a ninguna sub-sección.
+        En "instructions" (nivel raíz) coloca las instrucciones generales de armado, horneado o ensamble final.
+        Si NO hay sub-secciones, deja "subRecipes" como array vacío y coloca todos los ingredientes en "ingredients".
 
-        IMPORTANTE: Si la receta principal usa una sub-receta como ingrediente, inclúyela en la lista de ingredientes de la receta principal con su nombre exacto.
+        Para CADA ingrediente, extrae su nombre, cantidad y unidad (ej: "Harina", 375, "g"). Si la cantidad es "c.n." (cantidad necesaria), usa 0.
 
-        TABLA DE CONVERSIÓN DE MEDIDAS:
-        - Aceite vegetal: 1 taza = 250 ml
-        - Leche fresca / UHT: 1 taza = 250 ml
-        - Crema de leche: 1 taza = 250 ml
-        - Agua / Caldo / Café: 1 taza = 250 ml
-        - Vino / Licores: 1 onza = 30 ml
-        - Vinagre blanco: 1 cdta = 5 ml
-        - Esencia de Vainilla: 1 cdta = 5 ml
-        - Harina (sin preparar/todo uso): 1 taza = 125 g
-        - Azúcar blanca: 1 taza = 200 g
-        - Azúcar rubia: 1 taza = 220 g
-        - Cocoa / Cacao: 1 taza = 100 g
-        - Azúcar en polvo: 1 taza = 120 g
-        - Maicena: 1 cda = 8 g
-        - Polvo de hornear: 1 cdta = 5 g
-        - Bicarbonato: 1 cdta = 5 g
-        - Sal: 1 cdta = 5 g
-        - Canela molida: 1 cda = 8 g
-        - Leche Condensada: 1 lata = 393 g
-        - Leche Evaporada Gloria: 1 lata = 390 g
-        - Mantequilla: 1 cda = 15 g
-        - Ajo molido / Ají amarillo: 1 cda = 15 g
-        - Queso rallado: 1 taza = 100 g
-        - Pecanas picadas: 1 taza = 100 g
-
-        Si un ingrediente no está en la tabla, intenta usar una conversión estándar o mantén la unidad si es clara.`;
+        Es obligatorio que respetes la siguiente estructura JSON para CADA receta:
+        {
+          "name": "Nombre de la Receta Completa",
+          "type": "complete",
+          "yield": 1,
+          "yieldUnit": "porciones / unidades",
+          "subRecipes": [
+            {
+              "name": "Nombre de la Sub-receta",
+              "ingredients": [
+                { "name": "Harina", "quantity": 375, "unit": "g" }
+              ],
+              "instructions": ["Mezclar la mantequilla con la harina..."]
+            }
+          ],
+          "ingredients": [
+            { "name": "nombre del insumo directo", "quantity": 125, "unit": "g" }
+          ],
+          "instructions": ["Instrucciones generales de armado..."],
+          "equipment": [{ "name": "Horno", "hoursUsed": 1.5 }],
+          "laborCost": 0
+        }`;
         schema = {
           type: Type.ARRAY,
           items: {
@@ -1140,16 +1173,49 @@ export default function App() {
             properties: {
               name: { type: Type.STRING },
               type: { type: Type.STRING, enum: ['sub', 'complete'] },
+              yield: { type: Type.NUMBER },
+              yieldUnit: { type: Type.STRING },
+              subRecipes: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    ingredients: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          name: { type: Type.STRING },
+                          quantity: { type: Type.NUMBER },
+                          unit: { type: Type.STRING }
+                        },
+                        required: ["name", "quantity", "unit"]
+                      }
+                    },
+                    instructions: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING }
+                    }
+                  },
+                  required: ["name", "ingredients", "instructions"]
+                }
+              },
               ingredients: {
                 type: Type.ARRAY,
                 items: {
                   type: Type.OBJECT,
                   properties: {
                     name: { type: Type.STRING },
-                    quantity: { type: Type.NUMBER }
+                    quantity: { type: Type.NUMBER },
+                    unit: { type: Type.STRING }
                   },
-                  required: ["name", "quantity"]
+                  required: ["name", "quantity", "unit"]
                 }
+              },
+              instructions: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
               },
               equipment: {
                 type: Type.ARRAY,
@@ -1162,9 +1228,7 @@ export default function App() {
                   required: ["name", "hoursUsed"]
                 }
               },
-              laborCost: { type: Type.NUMBER },
-              yield: { type: Type.NUMBER },
-              yieldUnit: { type: Type.STRING }
+              laborCost: { type: Type.NUMBER }
             },
             required: ["name", "type", "ingredients", "yield"]
           }
@@ -1318,66 +1382,214 @@ export default function App() {
       } else if (activeTab === 'recipes') {
         const extractedRecipes = (Array.isArray(extractedData) ? extractedData : [extractedData]).filter(Boolean);
         const newlyCreatedRecipes: Recipe[] = [];
+        const newMappings: IngredientMapping[] = [];
 
-        // First pass: Create all recipes (so we have IDs for sub-recipes)
+        // Helper: match an AI ingredient to supplies, recipes, or ingredient mappings
+        const matchIngredient = (ing: any): any => {
+          const ingName = String(ing?.name || '').trim();
+          if (!ingName) return null;
+          const lowerName = ingName.toLowerCase();
+
+          // 1. Check custom ingredient mappings first
+          const customMapping = ingredientMappings.find(m => m.rawName.toLowerCase() === lowerName);
+          if (customMapping) {
+            let finalQty = safeNum(ing?.quantity);
+            if (customMapping.equivalenceRatio && customMapping.originalUnit === (ing?.unit || '')) {
+              finalQty = finalQty * customMapping.equivalenceRatio;
+            }
+            if (customMapping.supplyId) {
+              return {
+                supplyId: customMapping.supplyId,
+                quantity: finalQty,
+                name: ingName,
+                originalQuantity: safeNum(ing?.quantity),
+                originalUnit: ing?.unit || '',
+                isFixed: false
+              };
+            }
+            if (customMapping.recipeId) {
+              return {
+                recipeId: customMapping.recipeId,
+                quantity: finalQty,
+                name: ingName,
+                originalQuantity: safeNum(ing?.quantity),
+                originalUnit: ing?.unit || '',
+                isFixed: false
+              };
+            }
+          }
+
+          // 2. Check if it matches an existing sub-recipe (by name)
+          const subRecipeMatch = [...recipes, ...newlyCreatedRecipes].find(r =>
+            r?.name?.toLowerCase() === lowerName
+          );
+          if (subRecipeMatch) {
+            return {
+              recipeId: subRecipeMatch.id,
+              quantity: safeNum(ing?.quantity),
+              name: ingName,
+              originalQuantity: safeNum(ing?.quantity),
+              originalUnit: ing?.unit || '',
+              isFixed: false
+            };
+          }
+
+          // 3. Check if it matches a supply (fuzzy)
+          const supplyMatch = supplies.find(s =>
+            s.name.toLowerCase().includes(lowerName) || lowerName.includes(s.name.toLowerCase())
+          );
+          if (supplyMatch) {
+            return {
+              supplyId: supplyMatch.id,
+              quantity: safeNum(ing?.quantity),
+              name: ingName,
+              originalQuantity: safeNum(ing?.quantity),
+              originalUnit: ing?.unit || '',
+              isFixed: false
+            };
+          }
+
+          // 4. No match - keep the name for manual mapping later
+          return {
+            quantity: safeNum(ing?.quantity),
+            name: ingName,
+            originalQuantity: safeNum(ing?.quantity),
+            originalUnit: ing?.unit || '',
+            isFixed: false
+          };
+        };
+
+        // Register a mapping for learning
+        const registerMapping = (ing: any) => {
+          if (ing.name && (ing.supplyId || ing.recipeId)) {
+            let equivalenceRatio: number | undefined = undefined;
+            if (ing.originalQuantity && ing.quantity && ing.originalQuantity > 0) {
+              equivalenceRatio = ing.quantity / ing.originalQuantity;
+            }
+            newMappings.push({
+              rawName: ing.name.toLowerCase(),
+              supplyId: ing.supplyId,
+              recipeId: ing.recipeId,
+              originalUnit: ing.originalUnit,
+              equivalenceRatio
+            });
+          }
+        };
+
+        // Process each extracted recipe
         for (const rData of extractedRecipes) {
           if (!rData) continue;
-          const newRecipe: Recipe = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: String(rData.name || 'Nueva Receta IA'),
-            type: (rData.type === 'sub' || rData.type === 'complete') ? rData.type : 'complete',
-            ingredients: [], // Will fill in second pass
-            equipment: (rData.equipment || []).filter(Boolean).map((eq: any) => {
-              const eqName = String(eq?.name || '');
-              const match = equipment.find(e => e?.name?.toLowerCase().includes(eqName.toLowerCase()));
-              return {
-                equipmentId: match ? match.id : 'unknown',
-                hoursUsed: safeNum(eq?.hoursUsed)
+          const recipeId = Math.random().toString(36).substr(2, 9);
+          const recipeType: 'sub' | 'complete' = (rData.type === 'sub' || rData.type === 'complete') ? rData.type : 'complete';
+          const mainIngredients: any[] = [];
+          const combinedInstructions: string[] = [];
+
+          // Process subRecipes first
+          if (Array.isArray(rData.subRecipes) && rData.subRecipes.length > 0) {
+            for (const sr of rData.subRecipes) {
+              const subId = Math.random().toString(36).substr(2, 9);
+              const subIngredients = (sr.ingredients || []).map(matchIngredient).filter(Boolean);
+              const subInstructions = sr.instructions || [];
+              const subRawText = `SUB-RECETA: ${sr.name}\n\nINGREDIENTES:\n` +
+                (sr.ingredients || []).map((i: any) => `- ${i.name}: ${i.quantity} ${i.unit || ''}`).join('\n') +
+                `\n\nPREPARACIÓN:\n` + subInstructions.map((s: string) => `- ${s}`).join('\n');
+
+              // Register mappings for sub-recipe ingredients
+              subIngredients.forEach(registerMapping);
+
+              const newSubRecipe: Recipe = {
+                id: subId,
+                name: String(sr.name),
+                type: 'sub',
+                yield: 1,
+                yieldUnit: 'receta',
+                ingredients: subIngredients,
+                equipment: [],
+                laborCost: 0,
+                instructions: subInstructions,
+                rawText: subRawText
               };
-            }),
+              newlyCreatedRecipes.push(newSubRecipe);
+
+              // Link as ingredient in the main recipe
+              mainIngredients.push({
+                recipeId: subId,
+                quantity: 1,
+                name: String(sr.name),
+                isFixed: false
+              });
+
+              if (subInstructions.length > 0) {
+                combinedInstructions.push(`[${sr.name}] ${subInstructions.join(' | ')}`);
+              }
+            }
+          }
+
+          // Add direct ingredients (root level)
+          if (Array.isArray(rData.ingredients)) {
+            for (const ing of rData.ingredients) {
+              const matched = matchIngredient(ing);
+              if (matched) {
+                mainIngredients.push(matched);
+                registerMapping(matched);
+              }
+            }
+          }
+
+          // Add main instructions
+          if (Array.isArray(rData.instructions)) {
+            combinedInstructions.push(...rData.instructions);
+          }
+
+          // Match equipment
+          const recipeEquipment = (rData.equipment || []).filter(Boolean).map((eq: any) => {
+            const eqName = String(eq?.name || '');
+            const match = equipment.find(e => e?.name?.toLowerCase().includes(eqName.toLowerCase()));
+            return {
+              equipmentId: match ? match.id : 'unknown',
+              hoursUsed: safeNum(eq?.hoursUsed)
+            };
+          });
+
+          const newRecipe: Recipe = {
+            id: recipeId,
+            name: String(rData.name || 'Nueva Receta IA'),
+            type: recipeType,
+            ingredients: mainIngredients,
+            equipment: recipeEquipment,
             laborCost: safeNum(rData.laborCost),
             yield: safeNum(rData.yield) || 1,
-            yieldUnit: String(rData.yieldUnit || 'un')
+            yieldUnit: String(rData.yieldUnit || 'un'),
+            instructions: combinedInstructions
           };
           newlyCreatedRecipes.push(newRecipe);
         }
 
-        // Second pass: Fill ingredients and link sub-recipes
-        for (let i = 0; i < newlyCreatedRecipes.length; i++) {
-          const rData = extractedRecipes[i];
-          if (!rData) continue;
-          newlyCreatedRecipes[i].ingredients = (rData.ingredients || []).filter(Boolean).map((ing: any) => {
-            const ingName = String(ing?.name || '');
-            // Check if it's a sub-recipe (either existing or newly created)
-            const subRecipeMatch = [...recipes, ...newlyCreatedRecipes].find(r => 
-              r?.name?.toLowerCase() === ingName.toLowerCase() && r?.id !== newlyCreatedRecipes[i].id
-            );
-            
-            if (subRecipeMatch) {
-              return {
-                recipeId: subRecipeMatch.id,
-                quantity: safeNum(ing?.quantity)
-              };
-            }
-
-            // Otherwise check if it's a supply
-            const supplyMatch = supplies.find(s => s?.name?.toLowerCase().includes(ingName.toLowerCase()));
-            return {
-              supplyId: supplyMatch ? supplyMatch.id : 'unknown',
-              quantity: safeNum(ing?.quantity)
-            };
+        // Register learned mappings
+        if (newMappings.length > 0) {
+          setIngredientMappings(prev => {
+            const updated = [...prev];
+            newMappings.forEach(m => {
+              const idx = updated.findIndex(u => u.rawName.toLowerCase() === m.rawName.toLowerCase());
+              if (idx > -1) {
+                updated[idx] = { ...updated[idx], ...m };
+              } else {
+                updated.push(m);
+              }
+            });
+            return updated;
           });
         }
 
         setRecipes(prev => [...prev, ...newlyCreatedRecipes]);
-        
-        // Open the last one for review ONLY if we have recipes
+
         if (newlyCreatedRecipes.length > 0) {
-          const lastRecipe = newlyCreatedRecipes[newlyCreatedRecipes.length - 1];
-          setEditingRecipe(lastRecipe);
-          setRecipeFormData(lastRecipe);
-          setIsRecipeModalOpen(true);
-          showNotification(`Se importaron ${newlyCreatedRecipes.length} recetas. Por favor, revísalas.`, 'success');
+          const completeCount = newlyCreatedRecipes.filter(r => r.type === 'complete').length;
+          const subCount = newlyCreatedRecipes.filter(r => r.type === 'sub').length;
+          const parts: string[] = [];
+          if (completeCount > 0) parts.push(`${completeCount} receta(s) completa(s)`);
+          if (subCount > 0) parts.push(`${subCount} sub-receta(s)`);
+          showNotification(`¡Importación masiva exitosa! ${parts.join(' y ')} creadas.`, 'success');
         } else {
           showNotification('No se pudieron extraer recetas válidas del texto.', 'info');
         }
@@ -1593,6 +1805,28 @@ export default function App() {
 
   const handleSaveRecipe = () => {
     if (!recipeFormData.name) return;
+
+    // Learning Mappings: Collect mapped ingredients that have an original name
+    const newMappings: IngredientMapping[] = [];
+    (recipeFormData.ingredients || []).forEach(ing => {
+      if (ing.name && (ing.supplyId || ing.recipeId)) {
+        let equivalenceRatio: number | undefined = undefined;
+        if (ing.originalQuantity && ing.quantity) {
+          equivalenceRatio = ing.quantity / ing.originalQuantity;
+        }
+        newMappings.push({
+          rawName: ing.name.toLowerCase(),
+          supplyId: ing.supplyId,
+          recipeId: ing.recipeId,
+          originalUnit: ing.originalUnit,
+          equivalenceRatio
+        });
+      }
+    });
+    if (newMappings.length > 0) {
+      handleRegisterMappings(newMappings);
+    }
+
     const recipeData: Recipe = {
       id: editingRecipe?.id || Math.random().toString(36).substr(2, 9),
       name: String(recipeFormData.name!),
@@ -1622,15 +1856,26 @@ export default function App() {
         packaging: safeNum(recipeFormData.extraCosts?.packaging)
       },
       yield: safeNum(recipeFormData.yield) || 1,
-      yieldUnit: String(recipeFormData.yieldUnit || 'un')
+      yieldUnit: String(recipeFormData.yieldUnit || 'un'),
+      rawText: recipeFormData.rawText,
+      instructions: recipeFormData.instructions || [],
+      author: recipeFormData.author
     };
 
+    const newSubRecipes = recipeFormData.generatedSubRecipes || [];
+
     if (editingRecipe) {
-      setRecipes(prev => prev.map(r => r.id === editingRecipe.id ? recipeData : r));
+      setRecipes(prev => {
+        const filtered = prev.filter(r => r.id !== editingRecipe.id);
+        return [...newSubRecipes, recipeData, ...filtered];
+      });
       showNotification('Receta actualizada', 'success');
     } else {
-      setRecipes(prev => [...prev, recipeData]);
-      showNotification('Receta creada', 'success');
+      setRecipes(prev => [...newSubRecipes, recipeData, ...prev]);
+      const msg = newSubRecipes.length > 0
+        ? `Receta creada y ${newSubRecipes.length} sub-receta(s) añadidas a 'Bases y Rellenos'`
+        : 'Receta creada';
+      showNotification(msg, 'success');
     }
     setIsRecipeModalOpen(false);
     setEditingRecipe(null);
@@ -1643,12 +1888,34 @@ export default function App() {
       laborMinutes: { heavy: 0, light: 0 },
       serviceMinutes: { electricity: 0, water: 0, gas: 0, machinery: 0, utensils: 0 },
       extraCosts: { biosecurity: 0, packaging: 0 },
-      yield: 1 
+      yield: 1
     });
   };
 
   const handleSaveSubRecipe = () => {
     if (!subRecipeFormData.name) return;
+
+    // Learning Mappings: Collect mapped ingredients that have an original name
+    const newMappings: IngredientMapping[] = [];
+    (subRecipeFormData.ingredients || []).forEach(ing => {
+      if (ing.name && (ing.supplyId || ing.recipeId)) {
+        let equivalenceRatio: number | undefined = undefined;
+        if (ing.originalQuantity && ing.quantity) {
+          equivalenceRatio = ing.quantity / ing.originalQuantity;
+        }
+        newMappings.push({
+          rawName: ing.name.toLowerCase(),
+          supplyId: ing.supplyId,
+          recipeId: ing.recipeId,
+          originalUnit: ing.originalUnit,
+          equivalenceRatio
+        });
+      }
+    });
+    if (newMappings.length > 0) {
+      handleRegisterMappings(newMappings);
+    }
+
     const recipeData: Recipe = {
       id: editingSubRecipe?.id || Math.random().toString(36).substr(2, 9),
       name: String(subRecipeFormData.name!),
@@ -1678,7 +1945,10 @@ export default function App() {
         packaging: safeNum(subRecipeFormData.extraCosts?.packaging)
       },
       yield: safeNum(subRecipeFormData.yield) || 1,
-      yieldUnit: String(subRecipeFormData.yieldUnit || 'g')
+      yieldUnit: String(subRecipeFormData.yieldUnit || 'g'),
+      rawText: subRecipeFormData.rawText,
+      instructions: subRecipeFormData.instructions || [],
+      author: subRecipeFormData.author
     };
 
     if (editingSubRecipe) {
@@ -1702,6 +1972,34 @@ export default function App() {
       yield: 1,
       yieldUnit: 'g'
     });
+  };
+
+  const handleImportExcelRecipes = (newRecipes: Recipe[], newSupplies: Supply[]) => {
+    if (newSupplies.length > 0) {
+      setSupplies(prev => {
+        const updated = [...prev];
+        newSupplies.forEach(newSup => {
+          const exists = updated.some(s => s.name.trim().toLowerCase() === newSup.name.trim().toLowerCase());
+          if (!exists) updated.push(newSup);
+        });
+        return updated;
+      });
+    }
+    if (newRecipes.length > 0) {
+      setRecipes(prev => {
+        const updated = [...prev];
+        newRecipes.forEach(newRec => {
+          const existingIdx = updated.findIndex(r => r.id === newRec.id);
+          if (existingIdx !== -1) {
+            updated[existingIdx] = newRec;
+          } else {
+            updated.push(newRec);
+          }
+        });
+        return updated;
+      });
+    }
+    showNotification(`Se importaron/actualizaron ${newRecipes.length} recetas`, 'success');
   };
 
   const handleDeleteRecipe = (id: string) => {
@@ -2053,62 +2351,282 @@ export default function App() {
 
   const generateQuotePDF = (quote: Quote) => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
     
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(settings.primaryColor || '#F27D26');
-    doc.text(settings.businessName || 'Dulce Contraste', 20, 20);
+    // Fecha formateada (ej: Piura, 04 de febrero del 2026)
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const d = new Date(quote.date || Date.now());
+    const fechaStr = `${d.getDate()} de ${meses[d.getMonth()]} del ${d.getFullYear()}`;
+    const ciudad = quote.city || 'Piura';
     
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text('Cotización de Productos Gastronómicos', 20, 30);
-    
-    // Quote Info
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(`Cliente: ${quote.customerName}`, 20, 45);
-    doc.text(`Fecha: ${new Date(quote.date).toLocaleDateString()}`, 20, 52);
-    doc.text(`Cotización #: ${quote.id}`, 140, 45);
+    doc.text(`${ciudad}, ${fechaStr}`, pageWidth - 20, 20, { align: 'right' });
     
-    // Table
-    const tableData = quote.items.map(item => {
+    // N° de Cotización y Cliente
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`COTIZACIÓN N.° ${quote.id}`, 20, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Sres.:`, 20, 37);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${(quote.customerName || '').toUpperCase()}`, 32, 37);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('La presente es para saludarlo cordialmente y, a la vez, hacer llegar la cotización solicitada:', 20, 47);
+    
+    // Tabla de items + acumuladores de totales
+    let sumaSinIgv = 0;
+    let sumaConIgv = 0;
+    const tableData = quote.items.map((item, idx) => {
       const product = products.find(p => p.id === item.productId);
+      const format = product?.saleFormats?.find(f => f.name === item.formatName);
+      const desc = product?.name || item.formatName || 'Servicio / Producto';
+      const detalleFormato = product && item.formatName && item.formatName !== product.name ? item.formatName : '';
+      const descCompleta = detalleFormato ? `${desc}\n(${detalleFormato})` : desc;
+      // Cantidad con singular / plural correcto
+      const cantidadStr = item.quantity === 1 ? '1 unidad' : `${item.quantity} unidades`;
+      
+      // Se detecta si el precio guardado YA INCLUYE IGV según la casilla del formato del producto.
+      // Si el ítem guardó su propio flag, ese manda (por si el producto cambió después).
+      const igvRate = item.igvRate ?? format?.igvRate ?? 18;
+      const factor = 1 + igvRate / 100;
+      const precioIncluyeIgv = item.priceIncludesIgv !== undefined
+        ? item.priceIncludesIgv
+        : !!format?.includeIgv;
+      const precioMostrado = item.price;
+      // Casilla MARCADA  -> el precio ingresado incluye IGV  -> se desglosa hacia atrás (/1.18)
+      // Casilla DESMARCADA -> el precio ingresado es la base  -> se calcula el IGV hacia adelante (*1.18)
+      const precioSinIgv = precioIncluyeIgv ? precioMostrado / factor : precioMostrado;
+      const precioConIgv = precioIncluyeIgv ? precioMostrado : precioMostrado * factor;
+      
+      // Sumatoria de los montos respectivos (precio unitario x cantidad)
+      sumaSinIgv += precioSinIgv * item.quantity;
+      sumaConIgv += precioConIgv * item.quantity;
+      
       return [
-        product?.name || 'Producto',
-        item.formatName,
-        item.quantity,
-        formatPrice(item.price),
-        formatPrice(item.price * item.quantity)
+        (idx + 1).toString(),
+        descCompleta,
+        cantidadStr,
+        `S/${precioSinIgv.toFixed(2)}`,
+        `S/${precioConIgv.toFixed(2)}`
       ];
     });
     
     autoTable(doc, {
-      startY: 65,
-      head: [['Producto', 'Formato', 'Cant.', 'Precio Unit.', 'Subtotal']],
+      startY: 50,
+      head: [['N.°', 'DESCRIPCIÓN', 'CANTIDAD', 'PRECIO\nSIN IGV', 'PRECIO\nCON IGV']],
       body: tableData,
-      theme: 'striped',
-      headStyles: { fillColor: settings.primaryColor || '#F27D26' },
-      foot: [['', '', '', 'TOTAL', formatPrice(quote.total)]],
-      footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' }
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [59, 113, 202],
+        textColor: 255, 
+        fontStyle: 'bold', 
+        halign: 'center',
+        valign: 'middle',
+        fontSize: 9
+      },
+      columnStyles: {
+        0: { cellWidth: 12, halign: 'center' },
+        1: { cellWidth: 92 },
+        2: { cellWidth: 30, halign: 'center' },
+        3: { cellWidth: 23, halign: 'right' },
+        4: { cellWidth: 23, halign: 'right' }
+      },
+      styles: { fontSize: 9, cellPadding: 3.5, valign: 'middle' }
     });
     
-    // Notes
-    if (quote.notes) {
-      const finalY = (doc as any).lastAutoTable.finalY + 10;
-      doc.setFontSize(10);
-      doc.text('Notas:', 20, finalY);
-      doc.setFontSize(9);
-      doc.setTextColor(100);
-      doc.text(quote.notes, 20, finalY + 7, { maxWidth: 170 });
+    let finalY = (doc as any).lastAutoTable.finalY + 7;
+    
+    // Totales
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('PRECIO TOTAL DE SERVICIOS:', 20, finalY);
+    
+    const descuentoActivo = !!quote.discountEnabled;
+    const descuentoPct = quote.discountPercent ?? 0;
+    const descuentoMonto = descuentoActivo ? sumaConIgv * (descuentoPct / 100) : 0;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`PRECIO SIN IGV: S/${sumaSinIgv.toFixed(2)}`, 20, finalY + 5.5);
+    doc.text(`PRECIO CON IGV: S/${sumaConIgv.toFixed(2)}`, 20, finalY + 11);
+    
+    let lineaY = finalY + 16.5;
+    if (descuentoActivo) {
+      const etiqueta = (quote.discountLabel || 'DESCUENTO ESPECIAL').toUpperCase();
+      doc.text(`${etiqueta} (${descuentoPct}%): - S/${descuentoMonto.toFixed(2)}`, 20, lineaY);
+      lineaY += 6;
     }
     
-    // Footer
-    const pageHeight = doc.internal.pageSize.height;
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text('Gracias por su preferencia. Esta cotización tiene una validez de 15 días.', 105, pageHeight - 10, { align: 'center' });
+    // PRECIO FINAL: se deja en blanco para llenarlo a mano al cerrar el acuerdo
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(220, 38, 38);
+    const etiquetaFinal = 'PRECIO FINAL (INCLUYE IGV): S/';
+    doc.text(etiquetaFinal, 20, lineaY);
+    const xLinea = 20 + doc.getTextWidth(etiquetaFinal) + 2;
+    doc.setDrawColor(220, 38, 38);
+    doc.setLineWidth(0.3);
+    doc.line(xLinea, lineaY + 0.8, 120, lineaY + 0.8);
+    doc.setTextColor(0);
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.2);
     
-    doc.save(`Cotizacion_${quote.customerName.replace(/\s+/g, '_')}_${quote.id}.pdf`);
+    finalY = lineaY + 7;
+    
+    // ---------------- Términos y condiciones ----------------
+    const pageHeight = doc.internal.pageSize.height;
+    const MARGEN_IZQ = 20;
+    const ANCHO_UTIL = 165;
+    const ALTO_FIRMA = 34; // "Atentamente" + nombre + RUC + separación previa
+    const LIMITE_INFERIOR = pageHeight - 15;
+    
+    const formatoFecha = (iso?: string) => {
+      if (!iso) return 'A coordinar';
+      const f = new Date(iso + (iso.length === 10 ? 'T00:00:00' : ''));
+      if (isNaN(f.getTime())) return iso;
+      return f.toLocaleDateString('es-PE');
+    };
+    
+    const vigencia = quote.validUntil
+      ? formatoFecha(quote.validUntil)
+      : new Date(Date.now() + 864000000).toLocaleDateString('es-PE');
+    const fechaEntrega = formatoFecha(quote.deliveryDate);
+    const ventanaEntrega = quote.deliveryWindow || '10 am a 12 pm';
+    
+    // Cada entrada: nivel de sangría + texto. null = línea en blanco.
+    const bloques: { indent: number; text: string | null }[] = [
+      { indent: 0, text: 'El precio de la cotización es a todo costo.' },
+      { indent: 0, text: `Vigencia de la cotización: Precios y descuentos válidos para confirmaciones hasta el ${vigencia}.` },
+      { indent: 0, text: 'Para confirmar su pedido, puede realizar el pago o abono del 50%.' },
+      { indent: 0, text: `Fecha de entrega: ${fechaEntrega}. Las entregas se realizan en el rango horario de ${ventanaEntrega}.` },
+      { indent: 0, text: 'Forma de pago:' },
+      { indent: 1, text: '50% de adelanto para reserva' },
+      { indent: 1, text: '50% restante al momento de la entrega del pedido.' },
+      { indent: 1, text: 'Factura a 30 días (disponible previa coordinación).' },
+      { indent: 0, text: 'Método de pago:' },
+      { indent: 1, text: 'Efectivo' },
+      { indent: 1, text: 'Plin: 923 506 309' },
+      { indent: 1, text: 'Transferencia bancaria a Cuenta Ahorro Soles:' },
+      { indent: 2, text: 'BBVA n.° 0011-0184-062153431' },
+      { indent: 2, text: 'CCI n.° 01181400026215343118' },
+      { indent: 1, text: 'Titular: Manuel Martín Villanueva Placencia.' },
+      { indent: 0, text: null },
+      { indent: 0, text: 'Agradeciendo de antemano su preferencia, quedo a su disposición para cualquier consulta adicional' }
+    ];
+    
+    // Términos personalizados (si el usuario los definió manualmente) reemplazan el bloque por defecto
+    const bloquesFinales: { indent: number; text: string | null }[] =
+      quote.terms && quote.terms.length > 0
+        ? quote.terms.map(t => ({ indent: 0, text: t }))
+        : bloques;
+    
+    const sangriaDe = (indent: number) => MARGEN_IZQ + (indent === 0 ? 5 : (indent * 6) + 5);
+    const prefijoDe = (indent: number) => (indent === 0 ? '• ' : `${'   '.repeat(indent)}* `);
+    
+    // Altura total que ocuparían los términos con un tamaño de letra dado
+    const medirBloques = (fontSize: number, interlinea: number) => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(fontSize);
+      let alto = 6; // alto del título "Términos y condiciones:"
+      bloquesFinales.forEach(({ indent, text }) => {
+        if (text === null) { alto += interlinea * 0.8; return; }
+        const ancho = ANCHO_UTIL - (sangriaDe(indent) - MARGEN_IZQ);
+        const lineas: string[] = doc.splitTextToSize(`${prefijoDe(indent)}${text}`, ancho);
+        alto += lineas.length * interlinea;
+      });
+      let altoNotas = 0;
+      if (quote.notes && quote.notes.trim()) {
+        const notas: string[] = doc.splitTextToSize(`Observaciones: ${quote.notes.trim()}`, ANCHO_UTIL);
+        altoNotas = (notas.length * interlinea) + interlinea;
+      }
+      return alto + altoNotas;
+    };
+    
+    // Se elige automáticamente el tamaño de letra más grande que permita que TODO quepa en una sola hoja.
+    const ESCALAS = [
+      { fontSize: 8.5, interlinea: 4.2 },
+      { fontSize: 8.0, interlinea: 3.9 },
+      { fontSize: 7.5, interlinea: 3.6 },
+      { fontSize: 7.0, interlinea: 3.3 }
+    ];
+    let escala = ESCALAS[ESCALAS.length - 1];
+    for (const opcion of ESCALAS) {
+      if (finalY + medirBloques(opcion.fontSize, opcion.interlinea) + ALTO_FIRMA <= LIMITE_INFERIOR) {
+        escala = opcion;
+        break;
+      }
+    }
+    const { fontSize, interlinea } = escala;
+    
+    const separacionFirma = 10;
+    
+    let tY = finalY;
+    
+    const nuevaPaginaSiHaceFalta = (alturaNecesaria: number) => {
+      if (tY + alturaNecesaria > LIMITE_INFERIOR) {
+        doc.addPage();
+        tY = 25;
+      }
+    };
+    
+    doc.setTextColor(0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Términos y condiciones:', MARGEN_IZQ, tY);
+    tY += 6;
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(fontSize);
+    
+    bloquesFinales.forEach(({ indent, text }) => {
+      if (text === null) {
+        tY += interlinea * 0.8;
+        return;
+      }
+      
+      const sangria = sangriaDe(indent);
+      const anchoTexto = ANCHO_UTIL - (sangria - MARGEN_IZQ);
+      const lineas: string[] = doc.splitTextToSize(`${prefijoDe(indent)}${text}`, anchoTexto);
+      
+      nuevaPaginaSiHaceFalta(lineas.length * interlinea);
+      doc.text(lineas, sangria, tY);
+      tY += lineas.length * interlinea;
+    });
+    
+    if (quote.notes && quote.notes.trim()) {
+      tY += interlinea;
+      doc.setFont('helvetica', 'bold');
+      const notas: string[] = doc.splitTextToSize(`Observaciones: ${quote.notes.trim()}`, ANCHO_UTIL);
+      nuevaPaginaSiHaceFalta(notas.length * interlinea);
+      doc.text(notas, MARGEN_IZQ, tY);
+      tY += notas.length * interlinea;
+      doc.setFont('helvetica', 'normal');
+    }
+    
+    // Bloque de firma: se sube un poco si falta espacio, pero nunca encima de los términos;
+    // si de plano no cabe, pasa a una segunda hoja.
+    const altoFirmaReal = 21;
+    if (tY + separacionFirma + altoFirmaReal > LIMITE_INFERIOR) {
+      const objetivo = LIMITE_INFERIOR - altoFirmaReal - separacionFirma;
+      if (objetivo >= tY + 2) {
+        tY = objetivo;
+      } else {
+        doc.addPage();
+        tY = 25;
+      }
+    }
+    tY += separacionFirma;
+    
+    doc.setFontSize(9);
+    doc.text('Atentamente,', MARGEN_IZQ, tY);
+    
+    tY += 16;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Manuel Martín Villanueva Placencia', pageWidth / 2, tY, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('RUC N.° 10107973287', pageWidth / 2, tY + 5, { align: 'center' });
+    
+    doc.save(`Cotizacion_${(quote.customerName || 'Cliente').replace(/\s+/g, '_')}_${quote.id}.pdf`);
   };
 
   const handleSaveQuote = () => {
@@ -2142,7 +2660,9 @@ export default function App() {
         productId: product.id,
         formatName: format.name,
         quantity: quoteItemForm.quantity,
-        price: format.price
+        price: format.price,
+        priceIncludesIgv: !!format.includeIgv,
+        igvRate: format.igvRate ?? 18
       };
       
       const newItems = [...(quoteFormData.items || []), newItem];
@@ -2189,6 +2709,21 @@ export default function App() {
     { id: 'tools', label: 'Herramientas', icon: Calculator },
     { id: 'settings', label: 'Configuración', icon: Settings },
   ];
+
+  const handleRegisterMappings = useCallback((newMappings: IngredientMapping[]) => {
+    setIngredientMappings(prev => {
+      const updated = [...prev];
+      newMappings.forEach(m => {
+        const idx = updated.findIndex(u => u.rawName.toLowerCase() === m.rawName.toLowerCase());
+        if (idx > -1) {
+          updated[idx] = { ...updated[idx], ...m };
+        } else {
+          updated.push(m);
+        }
+      });
+      return updated;
+    });
+  }, []);
 
   const renderActiveView = () => {
     switch (activeTab) {
@@ -2252,7 +2787,9 @@ export default function App() {
         return (
           <RecipesView 
             recipes={recipes}
+            onUpdateRecipes={setRecipes}
             supplies={supplies}
+            equipment={equipment}
             globalSearch={deferredSearch}
             setGlobalSearch={setGlobalSearch}
             recipeSubTab={recipeSubTab}
@@ -2310,6 +2847,11 @@ export default function App() {
             formatCurrency={(amt) => formatCurrency(amt, theme.currency)}
             settings={settings}
             onVoiceImport={() => setIsVoiceModalOpen(true)}
+            onExcelImport={() => setIsExcelImportModalOpen(true)}
+            onImportIA={() => setIsImportModalOpen(true)}
+            onAddSupply={(s: Supply) => setSupplies(prev => [...prev, s])}
+            ingredientMappings={ingredientMappings}
+            onRegisterMappings={handleRegisterMappings}
           />
         );
       case 'orders':
@@ -2390,7 +2932,7 @@ export default function App() {
             globalSearch={deferredSearch}
             onAddEquipment={() => {
               setEditingEquipment(null);
-              setEquipmentFormData({ name: '', purchasePrice: 0, usefulLifeYears: 5, maintenanceCostMonthly: 0, operatingHoursMonthly: 160 });
+              setEquipmentFormData({ name: '', purchasePrice: 0, usefulLifeYears: 5, maintenanceCostMonthly: 0, operatingHoursMonthly: 160, powerWatts: 0 });
               setIsEquipmentModalOpen(true);
             }}
             onEditEquipment={(e: Equipment) => {
@@ -2411,7 +2953,22 @@ export default function App() {
             globalSearch={deferredSearch}
             onAddQuote={() => {
               setEditingQuote(null);
-              setQuoteFormData({ customerName: '', items: [], date: new Date().toISOString().split('T', 1)[0], total: 0, notes: '' });
+              setQuoteFormData({
+                customerName: '',
+                items: [],
+                date: new Date().toISOString().split('T')[0],
+                total: 0,
+                notes: '',
+                city: 'Piura',
+                deliveryDate: '',
+                deliveryTime: '',
+                validUntil: '',
+                deliveryWindow: '10 am a 12 pm',
+                discountEnabled: false,
+                discountLabel: 'Descuento especial corporativo',
+                discountPercent: 8,
+                terms: []
+              });
               setIsQuoteModalOpen(true);
             }}
             onEditQuote={(q: Quote) => {
@@ -2640,6 +3197,10 @@ export default function App() {
               equipment={equipment}
               onSave={handleSaveRecipe}
               onQuickCreateSupply={handleQuickCreateSupply}
+              onEditSupply={(id) => setEditingSupply(supplies.find(s => s.id === id) || null)}
+              ingredientMappings={ingredientMappings}
+              onRegisterMappings={handleRegisterMappings}
+              professorColors={settings.professorColors || []}
             />
           )}
 
@@ -2652,6 +3213,10 @@ export default function App() {
               equipment={equipment}
               onSave={handleSaveSubRecipe}
               onQuickCreateSupply={handleQuickCreateSupply}
+              onEditSupply={(id) => setEditingSupply(supplies.find(s => s.id === id) || null)}
+              ingredientMappings={ingredientMappings}
+              onRegisterMappings={handleRegisterMappings}
+              professorColors={settings.professorColors || []}
             />
           )}
           
@@ -2960,6 +3525,10 @@ export default function App() {
           equipment={equipment}
           onSave={handleSaveRecipe}
           onQuickCreateSupply={handleQuickCreateSupply}
+          onEditSupply={(id) => setEditingSupply(supplies.find(s => s.id === id) || null)}
+          ingredientMappings={ingredientMappings}
+          onRegisterMappings={handleRegisterMappings}
+          professorColors={settings.professorColors || []}
         />
       </Modal>
 
@@ -2979,6 +3548,10 @@ export default function App() {
           equipment={equipment}
           onSave={handleSaveSubRecipe}
           onQuickCreateSupply={handleQuickCreateSupply}
+          onEditSupply={(id) => setEditingSupply(supplies.find(s => s.id === id) || null)}
+          ingredientMappings={ingredientMappings}
+          onRegisterMappings={handleRegisterMappings}
+          professorColors={settings.professorColors || []}
         />
       </Modal>
 
@@ -3195,18 +3768,24 @@ export default function App() {
                           <div className="absolute -top-7 right-0 flex justify-end w-full">
                             {(() => {
                               const formatCost = getProductCost(productFormData as Product, format.name);
-                              const suggestedPrice = (formatCost.variable * (1 + (productFormData.margin || 0) / 100)) + formatCost.fixed;
+                              const margen = productFormData.margin || 0;
+                              // Precio sugerido calculado como "sin IGV" (base)
+                              const sugeridoBase = (formatCost.variable * (1 + margen / 100)) + formatCost.fixed;
+                              const rate = (format.igvRate ?? 18) / 100;
+                              // Si la casilla IGV está marcada, el precio de venta debe incluir el IGV
+                              const sugerido = format.includeIgv ? sugeridoBase * (1 + rate) : sugeridoBase;
+                              const etiqueta = format.includeIgv ? `Sug c/IGV ${(format.igvRate ?? 18)}%` : 'Sug s/IGV';
                               return (
                                 <button 
                                   onClick={() => {
                                     const newFormats = [...(productFormData.saleFormats || [])];
-                                    newFormats[idx].price = Math.round(suggestedPrice);
+                                    newFormats[idx].price = Math.round(sugerido);
                                     setProductFormData({ ...productFormData, saleFormats: newFormats });
                                   }}
-                                  className="text-[9px] font-black text-primary hover:text-primary-600 transition-colors bg-white px-2 py-0.5 rounded-full border border-primary-100 shadow-sm"
-                                  title={`Costo Total: ${formatCurrency(formatCost.total, theme.currency)} (Var: ${formatCurrency(formatCost.variable, theme.currency)}, Fijo: ${formatCurrency(formatCost.fixed, theme.currency)})`}
+                                  className="text-[9px] font-black text-primary hover:text-primary-600 transition-colors bg-white px-2 py-0.5 rounded-full border border-primary-100 shadow-sm whitespace-nowrap"
+                                  title={`Costo Total: ${formatCurrency(formatCost.total, theme.currency)} (Var: ${formatCurrency(formatCost.variable, theme.currency)}, Fijo: ${formatCurrency(formatCost.fixed, theme.currency)})\nSugerido sin IGV: ${formatCurrency(sugeridoBase, theme.currency)}\nSugerido con IGV: ${formatCurrency(sugeridoBase * (1 + rate), theme.currency)}`}
                                 >
-                                  Sug: <span className="text-primary-700">{formatCurrency(suggestedPrice, theme.currency)}</span>
+                                  {etiqueta}: <span className="text-primary-700">{formatCurrency(sugerido, theme.currency)}</span>
                                 </button>
                               );
                             })()}
@@ -3343,6 +3922,45 @@ export default function App() {
                       </select>
                     )}
                   </div>
+
+                  {/* SUNAT IGV Tax toggle per Format */}
+                  <div className="flex items-center justify-between bg-white/60 px-3 py-2 rounded-xl border border-gray-100 mt-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id={`igv-${idx}`}
+                        checked={!!format.includeIgv}
+                        onChange={(e) => {
+                          const newFormats = [...(productFormData.saleFormats || [])];
+                          newFormats[idx].includeIgv = e.target.checked;
+                          if (e.target.checked && !newFormats[idx].igvRate) {
+                            newFormats[idx].igvRate = 18; // Default SUNAT Peru IGV 18%
+                          }
+                          setProductFormData({ ...productFormData, saleFormats: newFormats });
+                        }}
+                        className="w-4 h-4 text-primary accent-primary rounded cursor-pointer"
+                      />
+                      <label htmlFor={`igv-${idx}`} className="text-[11px] font-bold text-slate-700 cursor-pointer select-none flex items-center gap-1.5">
+                        <span>Aplicar IGV (SUNAT Perú)</span>
+                        <span className="text-[9px] bg-rose-100 text-rose-700 font-extrabold px-1.5 py-0.5 rounded-full">18%</span>
+                      </label>
+                    </div>
+                    {format.includeIgv && (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          value={format.igvRate ?? 18}
+                          onChange={(e) => {
+                            const newFormats = [...(productFormData.saleFormats || [])];
+                            newFormats[idx].igvRate = parseFloat(e.target.value) || 18;
+                            setProductFormData({ ...productFormData, saleFormats: newFormats });
+                          }}
+                          className="w-12 p-1 bg-white border border-gray-200 rounded text-center text-xs font-bold"
+                        />
+                        <span className="text-[10px] text-gray-500 font-bold">%</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -3471,6 +4089,97 @@ export default function App() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Entrega y vigencia */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-gray-100">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ciudad</label>
+                    <input
+                      type="text"
+                      value={quoteFormData.city || ''}
+                      onChange={(e) => setQuoteFormData({ ...quoteFormData, city: e.target.value })}
+                      placeholder="Piura"
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Vigencia hasta</label>
+                    <input
+                      type="date"
+                      value={quoteFormData.validUntil || ''}
+                      onChange={(e) => setQuoteFormData({ ...quoteFormData, validUntil: e.target.value })}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Fecha de Entrega</label>
+                    <input
+                      type="date"
+                      value={quoteFormData.deliveryDate || ''}
+                      onChange={(e) => setQuoteFormData({ ...quoteFormData, deliveryDate: e.target.value })}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Horario de Entrega</label>
+                    <input
+                      type="text"
+                      value={quoteFormData.deliveryWindow || ''}
+                      onChange={(e) => setQuoteFormData({ ...quoteFormData, deliveryWindow: e.target.value })}
+                      placeholder="10 am a 12 pm"
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Descuento editable */}
+                <div className="pt-4 border-t border-gray-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!quoteFormData.discountEnabled}
+                        onChange={(e) => setQuoteFormData({ ...quoteFormData, discountEnabled: e.target.checked })}
+                        className="w-4 h-4 accent-primary cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Aplicar Descuento</span>
+                    </label>
+                    {quoteFormData.discountEnabled && (
+                      <span className="text-xs font-black text-emerald-600">
+                        Ahorro: {formatCurrency((quoteFormData.total || 0) * ((quoteFormData.discountPercent || 0) / 100), theme.currency)}
+                      </span>
+                    )}
+                  </div>
+
+                  {quoteFormData.discountEnabled && (
+                    <div className="grid grid-cols-12 gap-3">
+                      <div className="col-span-8 space-y-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">Etiqueta del descuento</span>
+                        <input
+                          type="text"
+                          value={quoteFormData.discountLabel || ''}
+                          onChange={(e) => setQuoteFormData({ ...quoteFormData, discountLabel: e.target.value })}
+                          placeholder="Ej: Descuento especial corporativo"
+                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                        />
+                      </div>
+                      <div className="col-span-4 space-y-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">Porcentaje (%)</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={quoteFormData.discountPercent ?? 0}
+                          onChange={(e) => setQuoteFormData({ ...quoteFormData, discountPercent: parseFloat(e.target.value) || 0 })}
+                          className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-black text-emerald-600"
+                        />
+                      </div>
+                      <div className="col-span-12 text-[11px] font-bold text-slate-500 bg-emerald-50/60 border border-emerald-100 rounded-xl px-3 py-2">
+                        Precio final con descuento: <span className="text-emerald-700">{formatCurrency((quoteFormData.total || 0) * (1 - (quoteFormData.discountPercent || 0) / 100), theme.currency)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2 pt-4 border-t border-gray-100">
@@ -3640,6 +4349,15 @@ export default function App() {
         onClose={() => setIsVoiceModalOpen(false)}
         onProcess={handleVoiceRecipeImport}
         isProcessing={isImporting}
+      />
+      
+      {/* Excel Import Modal */}
+      <ExcelImportModal
+        isOpen={isExcelImportModalOpen}
+        onClose={() => setIsExcelImportModalOpen(false)}
+        supplies={supplies}
+        recipes={recipes}
+        onImport={handleImportExcelRecipes}
       />
       </>
     </ErrorBoundary>

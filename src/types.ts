@@ -26,6 +26,17 @@ export interface RecipeIngredient {
   recipeId?: string; // For sub-recipes
   quantity: number;
   isFixed?: boolean;
+  name?: string; // Original parsed name from text/AI
+  originalQuantity?: number; // AI extracted quantity
+  originalUnit?: string;      // AI extracted unit (e.g. cda, taza)
+}
+
+export interface IngredientMapping {
+  rawName: string;          // Extracted name (lowercase)
+  supplyId?: string;
+  recipeId?: string;
+  originalUnit?: string;    // E.g., 'cda', 'taza'
+  equivalenceRatio?: number; // How many inventory units per original unit
 }
 
 export interface RecipeEquipment {
@@ -75,6 +86,15 @@ export interface Recipe {
   totalCost?: number;
   costPerPortion?: number;
   catalogCategory?: 'Base' | 'Relleno' | 'Cubierta' | 'Ninguno';
+  inEbook?: boolean; // Legacy field - kept for data compatibility
+  instructions?: string[];
+  image?: string;
+  pdfPath?: string;
+  pdfPage?: number;
+  orderIndex?: number;
+  rawText?: string;
+  author?: string | null;
+  generatedSubRecipes?: Recipe[];
 }
 
 export interface Product {
@@ -91,6 +111,8 @@ export interface Product {
     availability?: 'in_stock' | 'on_order';
     leadTime?: string;
     image?: string;
+    includeIgv?: boolean;
+    igvRate?: number;
   }[];
   margin: number;
   image?: string;
@@ -134,12 +156,14 @@ export interface AppSettings {
   borderRadius: string;
   currency: string;
   language: string;
+  businessName?: string;
   whatsappPhone?: string;
   agendaStatus?: 'open' | 'limited' | 'closed';
   agendaMessage?: string;
   deliveryZones: { name: string; cost: number; description?: string }[];
   freeDeliveryThreshold?: number;
   masterCosts: MasterCosts;
+  professorColors?: { name: string; color: string }[];
 }
 
 export interface FinanceSummary {
@@ -161,9 +185,29 @@ export interface Quote {
     formatName: string;
     quantity: number;
     price: number;
+    /** Si el precio base ya incluye IGV (se muestra desglosado en el PDF) */
+    priceIncludesIgv?: boolean;
+    /** % de IGV aplicado a esta línea (SUNAT Perú = 18) */
+    igvRate?: number;
   }[];
   total: number;
   notes?: string;
+  /** Ciudad que aparece en la cabecera del PDF (ej: "Piura") */
+  city?: string;
+  deliveryDate?: string;
+  deliveryTime?: string;
+  /** Fecha límite de vigencia de la cotización (editable) */
+  validUntil?: string;
+  /** Rango horario de entrega (por defecto "10 am a 12 pm") */
+  deliveryWindow?: string;
+  /** Activa el bloque de descuento en el PDF */
+  discountEnabled?: boolean;
+  /** Texto del descuento (ej: "DESCUENTO ESPECIAL CORPORATIVO") */
+  discountLabel?: string;
+  /** Porcentaje de descuento, ej: 8 */
+  discountPercent?: number;
+  /** Términos y condiciones personalizados (si se omite, se usan los por defecto) */
+  terms?: string[];
 }
 
 export interface PurchaseItem {

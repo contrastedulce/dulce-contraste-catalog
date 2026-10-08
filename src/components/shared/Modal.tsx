@@ -149,7 +149,7 @@ export const Modal: React.FC<ModalProps> = ({
             className={cn(
               "relative w-full glass-morphism rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300",
               !dimensions.width && maxWidth,
-              isMinimized ? "max-h-[64px]" : "max-h-[95vh]"
+              isMinimized ? "max-h-16" : "max-h-[95vh]"
             )}
           >
             {/* Header (Drag area) */}
