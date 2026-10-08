@@ -3612,16 +3612,15 @@ export default function App() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Receta Base</label>
-              <select
-                value={productFormData.recipeId}
-                onChange={(e) => setProductFormData({ ...productFormData, recipeId: e.target.value })}
-                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary transition-all"
-              >
-                <option value="">Seleccionar receta...</option>
-                {recipes.filter(r => r.type === 'complete').map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
+              <SearchableSelect
+                options={recipes.filter(r => r.type === 'complete').map(r => ({ id: r.id, name: r.name }))}
+                value={productFormData.recipeId || ''}
+                onChange={(id) => setProductFormData({ ...productFormData, recipeId: id })}
+                placeholder="Buscar receta..."
+                searchPlaceholder="Escribe el nombre de la receta..."
+                emptyText="No se encontró la receta"
+                size="md"
+              />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Categoría</label>

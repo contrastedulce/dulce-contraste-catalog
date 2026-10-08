@@ -15,6 +15,12 @@ interface SearchableSelectProps {
   onAddNew?: (search: string) => void;
   placeholder?: string;
   className?: string;
+  /** Texto del campo de búsqueda interno */
+  searchPlaceholder?: string;
+  /** Texto cuando la búsqueda no encuentra nada */
+  emptyText?: string;
+  /** Tamaño del campo: sm (compacto, por defecto) o md (igual que los inputs del formulario) */
+  size?: 'sm' | 'md';
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -23,15 +29,19 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   onChange,
   onAddNew,
   placeholder = "Buscar...",
-  className = ""
+  className = "",
+  searchPlaceholder = "Escribe para filtrar...",
+  emptyText = "Sin resultados para",
+  size = 'sm'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find(o => o.id === value);
-  const filteredOptions = options.filter(o => 
-    o.name.toLowerCase().includes(search.toLowerCase())
+  const texto = (search || '').trim().toLowerCase();
+  const filteredOptions = options.filter(o =>
+    o.name.toLowerCase().includes(texto)
   );
 
   useEffect(() => {
@@ -49,15 +59,19 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       <div 
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full p-2.5 bg-white border rounded-xl flex items-center justify-between cursor-pointer transition-all hover:bg-gray-50/50",
+          "w-full bg-white border rounded-xl flex items-center justify-between cursor-pointer transition-all hover:bg-gray-50/50",
+          size === 'md' ? "p-4" : "p-2.5",
           isOpen ? "border-primary ring-2 ring-primary/10 shadow-sm" : "border-gray-200"
         )}
       >
         <span className={cn(
-          "text-xs truncate transition-all",
+          "truncate transition-all",
+          size === 'md' ? "text-base" : "text-xs",
           selectedOption ? "font-bold text-gray-900" : "text-gray-400 font-medium"
         )}>
-          {selectedOption ? `${selectedOption.name} (${selectedOption.unit || ''})` : placeholder}
+          {selectedOption
+            ? `${selectedOption.name}${selectedOption.unit ? ` (${selectedOption.unit})` : ''}`
+            : placeholder}
         </span>
         <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", isOpen && "rotate-180")} />
       </div>
@@ -72,7 +86,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Escribe para filtrar..."
+                placeholder={searchPlaceholder}
                 className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:ring-0 focus:border-primary font-medium"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -118,6 +132,14 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
               <div className="px-4 py-8 text-center">
                 <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">
                   Comienza a escribir...
+                </p>
+              </div>
+            )}
+
+            {filteredOptions.length === 0 && search.trim() && !onAddNew && (
+              <div className="px-4 py-8 text-center">
+                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">
+                  {emptyText} "{search.trim()}"
                 </p>
               </div>
             )}
