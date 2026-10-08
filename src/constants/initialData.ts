@@ -1989,6 +1989,25 @@ export const INITIAL_PRODUCTS: Product[] = [
     "categoryGroup": "TIRAMISU",
     "isActive": true,
     "isFeatured": false
+  },
+  {
+    "id": "tqu2x06y8",
+    "name": "TIRAMISU J",
+    "recipeId": "w2rmqhwkn",
+    "type": "single",
+    "saleFormats": [
+      {
+        "name": "Unidad",
+        "multiplier": 1,
+        "price": 23,
+        "availability": "on_order"
+      }
+    ],
+    "margin": 200,
+    "category": "Otros",
+    "categoryGroup": "",
+    "isActive": true,
+    "isFeatured": false
   }
 ];
 
