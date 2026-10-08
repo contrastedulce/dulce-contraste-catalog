@@ -446,25 +446,6 @@ export const INITIAL_PRODUCTS: Product[] = [
     "category": "Tartas"
   },
   {
-    "id": "9mff3fnfy",
-    "name": "Tiramisú",
-    "recipeId": "j8dlg2yns",
-    "type": "single",
-    "saleFormats": [
-      {
-        "name": "unidad",
-        "multiplier": 0.1111111111111111,
-        "divisor": 9,
-        "price": 0,
-        "extraSupplies": [],
-        "availability": "on_order"
-      }
-    ],
-    "margin": 200,
-    "isActive": true,
-    "isFeatured": false
-  },
-  {
     "id": "msw8uhq95",
     "name": "TORTA HELADA ",
     "recipeId": "iiauihb4c",
