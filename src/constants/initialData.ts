@@ -61437,7 +61437,7 @@ export const INITIAL_RECIPES: Recipe[] = [
   {
     "id": "amx7f2fdl",
     "name": "Tiramisú ",
-    "type": "sub",
+    "type": "complete",
     "ingredients": [
       {
         "quantity": 6,
@@ -61559,6 +61559,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       "Para la mezcla de café debemos mezclar el café pasado con el ron y comenzamos a remojar nuestras lenguas de gato.",
       "Las acomodamos en un molde y vamos intercalándolos con nuestra crema de mascarpone.",
       "Terminamos con una capa de crema y espolvoreamos la cocoa para finalizar."
-    ]
+    ],
+    "author": "María Gracia Mujica (MGM)"
   }
 ];
