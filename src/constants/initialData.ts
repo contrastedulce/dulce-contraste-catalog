@@ -1970,6 +1970,25 @@ export const INITIAL_PRODUCTS: Product[] = [
     "categoryGroup": "APPLE PIE CON CREMA PASTELERA DE VAINILLA",
     "isActive": true,
     "isFeatured": false
+  },
+  {
+    "id": "gvwshqv1t",
+    "name": "TIRAMISU",
+    "recipeId": "amx7f2fdl",
+    "type": "single",
+    "saleFormats": [
+      {
+        "name": "Unidad",
+        "multiplier": 1,
+        "price": 21,
+        "availability": "on_order"
+      }
+    ],
+    "margin": 200,
+    "category": "Otros",
+    "categoryGroup": "TIRAMISU",
+    "isActive": true,
+    "isFeatured": false
   }
 ];
 
