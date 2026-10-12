@@ -2086,6 +2086,134 @@ export const INITIAL_SETTINGS: AppSettings = {
 
 export const INITIAL_RECIPES: Recipe[] = [
   {
+    "id": "w2rmqhwkn",
+    "name": "Tiramisú 2",
+    "type": "complete",
+    "ingredients": [
+      {
+        "quantity": 6,
+        "originalQuantity": 6,
+        "originalUnit": "unidades",
+        "isFixed": false,
+        "supplyId": "2jxqc40rz"
+      },
+      {
+        "supplyId": "yslt8wfyl",
+        "quantity": 60,
+        "name": "azúcar blanca",
+        "originalQuantity": 0.75,
+        "originalUnit": "taza",
+        "isFixed": false
+      },
+      {
+        "supplyId": "y9tyjb74t",
+        "quantity": 90,
+        "name": "leche fresca",
+        "originalQuantity": 0.67,
+        "originalUnit": "taza",
+        "isFixed": false
+      },
+      {
+        "quantity": 310,
+        "originalQuantity": 1.25,
+        "originalUnit": "taza",
+        "isFixed": false,
+        "supplyId": "yv6cktt18"
+      },
+      {
+        "supplyId": "a0cykragp",
+        "quantity": 5,
+        "name": "vainilla",
+        "originalQuantity": 1,
+        "originalUnit": "cdta",
+        "isFixed": false
+      },
+      {
+        "supplyId": "d933jl17u",
+        "quantity": 15,
+        "name": "azúcar en polvo",
+        "originalQuantity": 1,
+        "originalUnit": "cdta",
+        "isFixed": false
+      },
+      {
+        "supplyId": "7fu60ocok",
+        "quantity": 250,
+        "name": "queso mascarpone",
+        "originalQuantity": 2,
+        "originalUnit": "paquetes",
+        "isFixed": false
+      },
+      {
+        "quantity": 15,
+        "originalQuantity": 0.5,
+        "originalUnit": "taza",
+        "isFixed": false,
+        "supplyId": "5ciegmvso"
+      },
+      {
+        "supplyId": "1ygdxlj3l",
+        "quantity": 100,
+        "name": "ron",
+        "originalQuantity": 0.25,
+        "originalUnit": "taza",
+        "isFixed": false
+      },
+      {
+        "supplyId": "lmt8exjw2",
+        "quantity": 40,
+        "name": "lenguas de gato",
+        "originalQuantity": 30,
+        "originalUnit": "unidades",
+        "isFixed": false
+      },
+      {
+        "quantity": 40,
+        "originalQuantity": 0.5,
+        "originalUnit": "taza",
+        "isFixed": false,
+        "supplyId": "jjxw9ho6g"
+      },
+      {
+        "quantity": 250,
+        "supplyId": "58r7s5tgk"
+      }
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "yield": 10,
+    "yieldUnit": "porciones",
+    "rawText": "Tiramisú:\n\n-  6 yemas de huevo\n-  ¾ taza azúcar blanca\n-  2/3 taza leche fresca\n-  1 ¼ taza crema de leche bien fría\n-  1 cdta vainilla\n-  1 cdta azúcar en polvo\n-  2 paquetes de queso mascarpone\n-  ½ taza café pasado o expreso\n-  ¼ taza de ron\n-  30 lenguas de gato\n-  ½ taza cocoa para espolvorear\n\nPreparación:\n\n-  En un tazón mezclamos las yemas con los ¾ taza de azúcar\n\nblanca con ayuda de una batidora eléctrica.\n\n-  Le agregamos la leche fresca y mezclamos nuevamente.\n-  Llevamos esta mezcla a una olla a fuego bajo por unos minutos\n\nsin dejar que rompa hervor para que no se corte. (solo para darle\npunto)\n\n-  Dejamos reposar en un tazón envuelto en papel film mientras\n\nsacamos la crema de leche de la refrigeradora.\n\n-  Batimos la crema de leche con la vainilla y el azúcar en polvo\n\nhasta tener picos firmes de chantilly y reservamos.\n\n-  Entonces ahora en un tazón un poco más grande agregamos la\n\nmezcla de yemas reservada anteriormente, el queso mascarpone\ny mezclamos con ayuda de un batidor globo de mano.\n\n-  Le agregamos a esto la crema chantilly, mezclamos y reservamos\n\nen la refrigeradora.\n\n-  Para la mezcla de café debemos mezclar el café pasado con el\n\nron y comenzamos a remojar nuestras lenguas de gato.\n-  Las acomodamos en un molde y vamos intercalándolos con\nnuestra crema de mascarpone.\nTerminamos con una capa de crema y espolvoreamos la cocoa\npara finalizar.",
+    "instructions": [
+      "En un tazón mezclamos las yemas con los ¾ taza de azúcar blanca con ayuda de una batidora eléctrica.",
+      "Le agregamos la leche fresca y mezclamos nuevamente.",
+      "Llevamos esta mezcla a una olla a fuego bajo por unos minutos sin dejar que rompa hervor para que no se corte. (solo para darle punto)",
+      "Dejamos reposar en un tazón envuelto en papel film mientras sacamos la crema de leche de la refrigeradora.",
+      "Batimos la crema de leche con la vainilla y el azúcar en polvo hasta tener picos firmes de chantilly y reservamos.",
+      "Entonces ahora en un tazón un poco más grande agregamos la mezcla de yemas reservada anteriormente, el queso mascarpone y mezclamos con ayuda de un batidor globo de mano.",
+      "Le agregamos a esto la crema chantilly, mezclamos y reservamos en la refrigeradora.",
+      "Para la mezcla de café debemos mezclar el café pasado con el ron y comenzamos a remojar nuestras lenguas de gato.",
+      "Las acomodamos en un molde y vamos intercalándolos con nuestra crema de mascarpone.",
+      "Terminamos con una capa de crema y espolvoreamos la cocoa para finalizar."
+    ],
+    "author": "María Gracia Mujica (MGM)"
+  },
+  {
     "id": "jcku1jr43",
     "name": "APPLE PIE CON CREMA PASTELERA DE VAINILLA (24 cm)",
     "type": "complete",
@@ -4952,134 +5080,6 @@ export const INITIAL_RECIPES: Recipe[] = [
       "[Masa de turrón] Para comenzar necesitamos derretir en una ollita o en el microondas nuestra mantequilla. | Le agregamos fuera del fuego (si estás haciéndolo en olla) el azúcar y mezclamos bien con una espátula de goma. | Agregamos los huevos 1 por 1 y seguimos mezclando con la espátula de goma, nunca con un batidor globo ya que podríamos incorporarle aire y no es lo que queremos. | Le agregamos la vainilla, la canela y la harina mezclada con las pecanas. | Mezclamos bien y llevamos la masa a 2 moldes cuadrados de 20x20 y llevamos al horno a 180 grados C* por 18-20 minutos.",
       "[Para el relleno (Manjar blanco)] Para el manjar blanco debemos llevar las leches a una olla de fondo grueso y una vez caliente le agregamos la canela en polvo o de lo contrario podemos utilizar una rama de canela. | Debemos llegar a 98-100 grados para el punto adecuado."
     ]
-  },
-  {
-    "id": "w2rmqhwkn",
-    "name": "Tiramisú 2",
-    "type": "complete",
-    "ingredients": [
-      {
-        "quantity": 6,
-        "originalQuantity": 6,
-        "originalUnit": "unidades",
-        "isFixed": false,
-        "supplyId": "2jxqc40rz"
-      },
-      {
-        "supplyId": "yslt8wfyl",
-        "quantity": 60,
-        "name": "azúcar blanca",
-        "originalQuantity": 0.75,
-        "originalUnit": "taza",
-        "isFixed": false
-      },
-      {
-        "supplyId": "y9tyjb74t",
-        "quantity": 90,
-        "name": "leche fresca",
-        "originalQuantity": 0.67,
-        "originalUnit": "taza",
-        "isFixed": false
-      },
-      {
-        "quantity": 310,
-        "originalQuantity": 1.25,
-        "originalUnit": "taza",
-        "isFixed": false,
-        "supplyId": "yv6cktt18"
-      },
-      {
-        "supplyId": "a0cykragp",
-        "quantity": 5,
-        "name": "vainilla",
-        "originalQuantity": 1,
-        "originalUnit": "cdta",
-        "isFixed": false
-      },
-      {
-        "supplyId": "d933jl17u",
-        "quantity": 15,
-        "name": "azúcar en polvo",
-        "originalQuantity": 1,
-        "originalUnit": "cdta",
-        "isFixed": false
-      },
-      {
-        "supplyId": "7fu60ocok",
-        "quantity": 250,
-        "name": "queso mascarpone",
-        "originalQuantity": 2,
-        "originalUnit": "paquetes",
-        "isFixed": false
-      },
-      {
-        "quantity": 15,
-        "originalQuantity": 0.5,
-        "originalUnit": "taza",
-        "isFixed": false,
-        "supplyId": "5ciegmvso"
-      },
-      {
-        "supplyId": "1ygdxlj3l",
-        "quantity": 100,
-        "name": "ron",
-        "originalQuantity": 0.25,
-        "originalUnit": "taza",
-        "isFixed": false
-      },
-      {
-        "supplyId": "lmt8exjw2",
-        "quantity": 40,
-        "name": "lenguas de gato",
-        "originalQuantity": 30,
-        "originalUnit": "unidades",
-        "isFixed": false
-      },
-      {
-        "quantity": 40,
-        "originalQuantity": 0.5,
-        "originalUnit": "taza",
-        "isFixed": false,
-        "supplyId": "jjxw9ho6g"
-      },
-      {
-        "quantity": 250,
-        "supplyId": "58r7s5tgk"
-      }
-    ],
-    "equipment": [],
-    "laborCost": 0,
-    "laborMinutes": {
-      "heavy": 0,
-      "light": 0
-    },
-    "serviceMinutes": {
-      "electricity": 0,
-      "water": 0,
-      "gas": 0,
-      "machinery": 0,
-      "utensils": 0
-    },
-    "extraCosts": {
-      "biosecurity": 0,
-      "packaging": 0
-    },
-    "yield": 10,
-    "yieldUnit": "porciones",
-    "rawText": "Tiramisú:\n\n-  6 yemas de huevo\n-  ¾ taza azúcar blanca\n-  2/3 taza leche fresca\n-  1 ¼ taza crema de leche bien fría\n-  1 cdta vainilla\n-  1 cdta azúcar en polvo\n-  2 paquetes de queso mascarpone\n-  ½ taza café pasado o expreso\n-  ¼ taza de ron\n-  30 lenguas de gato\n-  ½ taza cocoa para espolvorear\n\nPreparación:\n\n-  En un tazón mezclamos las yemas con los ¾ taza de azúcar\n\nblanca con ayuda de una batidora eléctrica.\n\n-  Le agregamos la leche fresca y mezclamos nuevamente.\n-  Llevamos esta mezcla a una olla a fuego bajo por unos minutos\n\nsin dejar que rompa hervor para que no se corte. (solo para darle\npunto)\n\n-  Dejamos reposar en un tazón envuelto en papel film mientras\n\nsacamos la crema de leche de la refrigeradora.\n\n-  Batimos la crema de leche con la vainilla y el azúcar en polvo\n\nhasta tener picos firmes de chantilly y reservamos.\n\n-  Entonces ahora en un tazón un poco más grande agregamos la\n\nmezcla de yemas reservada anteriormente, el queso mascarpone\ny mezclamos con ayuda de un batidor globo de mano.\n\n-  Le agregamos a esto la crema chantilly, mezclamos y reservamos\n\nen la refrigeradora.\n\n-  Para la mezcla de café debemos mezclar el café pasado con el\n\nron y comenzamos a remojar nuestras lenguas de gato.\n-  Las acomodamos en un molde y vamos intercalándolos con\nnuestra crema de mascarpone.\nTerminamos con una capa de crema y espolvoreamos la cocoa\npara finalizar.",
-    "instructions": [
-      "En un tazón mezclamos las yemas con los ¾ taza de azúcar blanca con ayuda de una batidora eléctrica.",
-      "Le agregamos la leche fresca y mezclamos nuevamente.",
-      "Llevamos esta mezcla a una olla a fuego bajo por unos minutos sin dejar que rompa hervor para que no se corte. (solo para darle punto)",
-      "Dejamos reposar en un tazón envuelto en papel film mientras sacamos la crema de leche de la refrigeradora.",
-      "Batimos la crema de leche con la vainilla y el azúcar en polvo hasta tener picos firmes de chantilly y reservamos.",
-      "Entonces ahora en un tazón un poco más grande agregamos la mezcla de yemas reservada anteriormente, el queso mascarpone y mezclamos con ayuda de un batidor globo de mano.",
-      "Le agregamos a esto la crema chantilly, mezclamos y reservamos en la refrigeradora.",
-      "Para la mezcla de café debemos mezclar el café pasado con el ron y comenzamos a remojar nuestras lenguas de gato.",
-      "Las acomodamos en un molde y vamos intercalándolos con nuestra crema de mascarpone.",
-      "Terminamos con una capa de crema y espolvoreamos la cocoa para finalizar."
-    ],
-    "author": "María Gracia Mujica (MGM)"
   },
   {
     "id": "elbnmf4kv",
