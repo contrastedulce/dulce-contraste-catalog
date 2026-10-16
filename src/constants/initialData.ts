@@ -38250,8 +38250,6 @@ export const INITIAL_RECIPES: Recipe[] = [
     "id": "rec_y3vlfpl9x",
     "name": "CINNAMON ROLLS MGM",
     "type": "complete",
-    "yield": 1,
-    "yieldUnit": "un",
     "ingredients": [
       {
         "recipeId": "rec_33voynbzi",
@@ -38261,7 +38259,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         "recipeId": "rec_rti5ru5op",
-        "quantity": 1,
+        "quantity": 180,
         "name": "FROSTING QUESO CREMA 2",
         "isFixed": false
       }
@@ -38283,9 +38281,11 @@ export const INITIAL_RECIPES: Recipe[] = [
       "biosecurity": 0,
       "packaging": 0
     },
+    "yield": 12,
+    "yieldUnit": "un",
+    "rawText": "Receta del Excel maestro\n",
     "instructions": [],
-    "author": "María Gracia Mujica (MGM)",
-    "rawText": "Receta del Excel maestro\n"
+    "author": "María Gracia Mujica (MGM)"
   },
   {
     "id": "rec_grmlaqndx",
