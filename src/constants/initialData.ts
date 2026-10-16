@@ -13452,8 +13452,6 @@ export const INITIAL_RECIPES: Recipe[] = [
     "id": "rec_rti5ru5op",
     "name": "FROSTING QUESO CREMA 2",
     "type": "sub",
-    "yield": 1,
-    "yieldUnit": "receta",
     "ingredients": [
       {
         "supplyId": "58r7s5tgk",
@@ -13505,9 +13503,11 @@ export const INITIAL_RECIPES: Recipe[] = [
       "biosecurity": 0,
       "packaging": 0
     },
+    "yield": 850,
+    "yieldUnit": "gr",
+    "rawText": "FROSTING QUESO CREMA 2 (por revisar)",
     "instructions": [],
-    "author": null,
-    "rawText": "FROSTING QUESO CREMA 2 (por revisar)"
+    "author": null
   },
   {
     "id": "rec_jryzs8gqq",
