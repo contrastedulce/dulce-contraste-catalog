@@ -51616,15 +51616,13 @@ export const INITIAL_RECIPES: Recipe[] = [
         "isFixed": false
       },
       {
-        "supplyId": "pdf_tomate_brunoise",
+        "supplyId": "4a3atczv6",
         "quantity": 200,
-        "name": "Tomate picado",
         "isFixed": false
       },
       {
-        "supplyId": "pdf_aji_amarillo_pic",
+        "supplyId": "64filom58",
         "quantity": 50,
-        "name": "Ají amarillo picado",
         "isFixed": false
       },
       {
