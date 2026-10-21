@@ -3422,7 +3422,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         "quantity": 1040,
-        "recipeId": "rec_rev_1786994161578_7sffl0"
+        "supplyId": "t4fcepdz3"
       },
       {
         "quantity": 120,
