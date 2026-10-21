@@ -3383,7 +3383,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       },
       {
         "quantity": 1050,
-        "recipeId": "rec_rev_1786994161578_d2padi"
+        "recipeId": "sub_relleno_carne_picada_cestino"
       },
       {
         "quantity": 120,
