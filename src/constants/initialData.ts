@@ -3374,11 +3374,11 @@ export const INITIAL_RECIPES: Recipe[] = [
   },
   {
     "id": "bkfchq8dj",
-    "name": "EMPANADA DE CARNE (CARO/GREZZIA)",
+    "name": "EMPANADA DE CARNE 1",
     "type": "complete",
     "ingredients": [
       {
-        "quantity": 976,
+        "quantity": 1050,
         "recipeId": "pdf_masa_empanada"
       },
       {
@@ -3407,7 +3407,7 @@ export const INITIAL_RECIPES: Recipe[] = [
       "biosecurity": 0,
       "packaging": 0
     },
-    "yield": 100,
+    "yield": 105,
     "yieldUnit": "un",
     "instructions": []
   },
