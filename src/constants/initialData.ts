@@ -3382,7 +3382,7 @@ export const INITIAL_RECIPES: Recipe[] = [
         "recipeId": "pdf_masa_empanada"
       },
       {
-        "quantity": 1050,
+        "quantity": 1,
         "recipeId": "sub_relleno_carne_picada_cestino"
       },
       {
