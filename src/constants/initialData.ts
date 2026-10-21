@@ -51602,10 +51602,6 @@ export const INITIAL_RECIPES: Recipe[] = [
     "id": "sub_relleno_carne_picada_cestino",
     "name": "✨ Relleno de carne picada",
     "type": "sub",
-    "yield": 12,
-    "yieldUnit": "porciones (60g)",
-    "author": "Karina Jerí (CESTINO)",
-    "rawText": "============================================================\nPDF: CESTINO - EMPANADAS 1ERA EDICIÓN.pdf\nEL TALLER DE HOY\nEMPANADAS 1ERA EDICIÓN\nProf. Karina Jerí (CESTINO)\n\nRELLENO DE CARNE PICADA:\n- 600 g Carne picada (bisteck)\n- 2 cebollas rojas medianas picadas\n- 2 tomates medianos picados\n- 1 ají amarillo en tiras pequeñas\n- 1 cda ajo molido\n- 1 cda ají amarillo molido\n- Páprika, orégano, sal, pimienta y culantro\n- Huevo duro y aceitunas negras sin pepa",
     "ingredients": [
       {
         "supplyId": "ukiqlv00b",
@@ -51656,12 +51652,33 @@ export const INITIAL_RECIPES: Recipe[] = [
         "isFixed": false
       }
     ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "yield": 1,
+    "yieldUnit": "receta",
+    "rawText": "============================================================\nPDF: CESTINO - EMPANADAS 1ERA EDICIÓN.pdf\nEL TALLER DE HOY\nEMPANADAS 1ERA EDICIÓN\nProf. Karina Jerí (CESTINO)\n\nRELLENO DE CARNE PICADA:\n- 600 g Carne picada (bisteck)\n- 2 cebollas rojas medianas picadas\n- 2 tomates medianos picados\n- 1 ají amarillo en tiras pequeñas\n- 1 cda ajo molido\n- 1 cda ají amarillo molido\n- Páprika, orégano, sal, pimienta y culantro\n- Huevo duro y aceitunas negras sin pepa",
     "instructions": [
       "Sudar la cebolla picada con aceite y pizca de sal.",
       "Añadir ajo, ají amarillo molido y tomate; cocinar 15 a 20 minutos.",
       "Añadir la carne picada salpimentada con el ají en tiras; dorar y finalizar con culantro picado.",
       "Bolear porciones con huevo duro y aceituna."
-    ]
+    ],
+    "author": "Karina Jerí (CESTINO)"
   },
   {
     "id": "rec_empanada_carne_picada_cestino",
