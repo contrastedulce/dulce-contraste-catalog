@@ -3533,18 +3533,39 @@ export const INITIAL_RECIPES: Recipe[] = [
     "type": "complete",
     "ingredients": [
       {
-        "recipeId": "9jcdyimue",
-        "quantity": 500,
-        "isFixed": false
+        "name": "leche condensada",
+        "quantity": 396,
+        "unit": "gr",
+        "supplyId": "sdmh7ppfw"
       },
       {
-        "quantity": 65,
-        "isFixed": false,
+        "name": "leche evaporada",
+        "quantity": 390,
+        "unit": "gr",
+        "supplyId": "pdf_leche_evap"
+      },
+      {
+        "name": "vainilla",
+        "quantity": 5,
+        "unit": "cdta",
+        "supplyId": "a0cykragp"
+      },
+      {
+        "name": "azúcar en polvo",
+        "quantity": 60,
+        "unit": "gr",
         "supplyId": "d933jl17u"
       },
       {
-        "quantity": 65,
+        "name": "canela en polvo",
+        "quantity": 60,
+        "unit": "gr",
         "supplyId": "khn2qw6wp"
+      },
+      {
+        "name": "palitos de brocheta",
+        "quantity": 1,
+        "unit": "unidad"
       }
     ],
     "equipment": [],
@@ -3565,16 +3586,17 @@ export const INITIAL_RECIPES: Recipe[] = [
       "packaging": 0
     },
     "yield": 1,
-    "yieldUnit": "receta",
+    "yieldUnit": "unidad",
     "rawText": "Papitas de manjar blanco:\n- 1 lata de leche condensada\n- 1 lata de leche evaporada\n- ½ cdta vainilla\nPara rodarlas:\n- ½ taza azúcar en polvo\n- ½ taza de canela en polvo\n- palitos de brocheta.\nPreparación:\n- Hacemos nuestro manjar blanco de la misma manera que en el\nprocedimiento de las uvitas con manjar, lo llevamos a 95-97\ngrados con termómetro.\n- Dejamos enfriar y con una balanza y una cuchara nos ayudamos\npesando bolitas de 13-14 gramos.\n- Las rodamos por el azúcar en polvo y canela mezclados para\ndarle ese color bajito marrón y con las yemas de los dedos le\ndamos forma para que parezca una papita.\n- Con un palito de brocheta o mondadientes le hacemos los\nagujeros para que termine de parecer una papita.",
     "instructions": [
-      "[Manjar blanco] Hacemos nuestro manjar blanco de la misma manera que en el procedimiento de las uvitas con manjar, lo llevamos a 95-97 grados con termómetro.",
-      "[Para rodarlas] Mezclar el azúcar en polvo y la canela en polvo para darle un color bajito marrón.",
+      "Hacemos nuestro manjar blanco de la misma manera que en el procedimiento de las uvitas con manjar, lo llevamos a 95-97 grados con termómetro.",
       "Dejamos enfriar y con una balanza y una cuchara nos ayudamos pesando bolitas de 13-14 gramos.",
       "Las rodamos por el azúcar en polvo y canela mezclados para darle ese color bajito marrón y con las yemas de los dedos le damos forma para que parezca una papita.",
       "Con un palito de brocheta o mondadientes le hacemos los agujeros para que termine de parecer una papita."
     ],
-    "author": "María Gracia Mujica (MGM)"
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Bola de oro y dulces MGM.pdf",
+    "catalogCategory": "Ninguno"
   },
   {
     "id": "3b31so0tx",
@@ -61595,5 +61617,83 @@ export const INITIAL_RECIPES: Recipe[] = [
       "Terminamos con una capa de crema y espolvoreamos la cocoa para finalizar."
     ],
     "author": "María Gracia Mujica (MGM)"
+  },
+  {
+    "id": "13pwo9afy",
+    "name": "Uvitas con manjar",
+    "type": "complete",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "uvas verdes",
+        "quantity": 50,
+        "unit": "unidad"
+      },
+      {
+        "name": "receta manjar blanco de olla",
+        "quantity": 1,
+        "unit": "gr",
+        "supplyId": "pdf_manjar"
+      },
+      {
+        "name": "Azúcar Blanca",
+        "quantity": 100,
+        "unit": "gramos",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "COLORANTE EN GEL",
+        "quantity": 1,
+        "unit": "gramos",
+        "supplyId": "zzay4yiap"
+      },
+      {
+        "name": "leche condensada",
+        "quantity": 396,
+        "unit": "gr",
+        "supplyId": "sdmh7ppfw"
+      },
+      {
+        "name": "leche evaporada",
+        "quantity": 390,
+        "unit": "gr",
+        "supplyId": "pdf_leche_evap"
+      },
+      {
+        "name": "vainilla",
+        "quantity": 5,
+        "unit": "ml",
+        "supplyId": "a0cykragp"
+      }
+    ],
+    "instructions": [
+      "Comenzamos haciendo el manjar blanco vertiendo las leches en una olla de fondo grueso y comenzamos a moverlo con una cuchara de palo que resista el calor.",
+      "Le damos punto a 95- 97 grados con termómetro y reservamos hasta enfriar.",
+      "Luego mientras esta enfría teñiremos el azúcar para formar azúcar verde.",
+      "Agregamos 2-3 gotas de tinte en gel a nuestro tapper de azúcar blanca (2 tazas de azúcar)",
+      "Comenzamos a mezclarla bien hasta que toda la azúcar se haya teñido por completo.",
+      "Pasamos las uvas por manjar blanco y las sumergimos en el azúcar verde, luego las colocamos en pirotines #3 de color marrón y las presentamos."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Bola de oro y dulces MGM.pdf",
+    "catalogCategory": "Ninguno"
   }
 ];
