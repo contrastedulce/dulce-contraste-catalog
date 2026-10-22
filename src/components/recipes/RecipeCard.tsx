@@ -3,7 +3,7 @@ import { ChefHat, Pencil, Trash2, ChevronRight, Clock, Box, Zap, DollarSign, Cal
 import { motion, AnimatePresence } from 'motion/react';
 import { GlassCard } from '../shared/GlassCard';
 import { Badge } from '../shared/Badge';
-import { cn, getProfessorColor } from '../../lib/utils';
+import { cn, getProfessorColor, getProfessorInitials, getProfessorShortName } from '../../lib/utils';
 import { Recipe, AppSettings } from '../../types';
 
 interface RecipeCardProps {
@@ -38,6 +38,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
   const totalCost = typeof getRecipeCost === 'function' ? getRecipeCost(recipe) : 0;
   const yieldVal = recipe.yield || 1;
   const costPerUnit = totalCost / yieldVal;
+
+  // Identidad visual de la profesora (color + iniciales)
+  const professorColor = getProfessorColor(recipe.author, settings.professorColors);
+  const professorInitials = getProfessorInitials(recipe.author);
+  const professorShortName = getProfessorShortName(recipe.author);
 
   // breakdown calculations
   const mc = settings.masterCosts;
@@ -78,6 +83,15 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
         isSelected && "ring-2 ring-rose-500/50 bg-rose-50/10 shadow-rose-100"
       )}
     >
+      {/* Barra lateral del color de la profesora: identifica el origen de un vistazo */}
+      {professorColor && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1.5 z-20"
+          style={{ backgroundColor: professorColor }}
+          aria-hidden="true"
+        />
+      )}
+
       <div className="absolute top-4 left-4 z-20">
         {!readOnly && (
           <input 
@@ -156,20 +170,23 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
               <Box className="w-3 h-3" />
               Rinde: {recipe.yield} {recipe.yieldUnit || 'un'}
             </span>
-            {recipe.author && getProfessorColor(recipe.author, settings.professorColors) && (
+            {recipe.author && professorColor && (
               <span
-                className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full border flex items-center gap-1.5"
+                className="text-[9px] font-black uppercase tracking-widest pl-1 pr-2.5 py-1 rounded-full border flex items-center gap-1.5"
                 style={{
-                  color: getProfessorColor(recipe.author, settings.professorColors)!,
-                  backgroundColor: `${getProfessorColor(recipe.author, settings.professorColors)}15`,
-                  borderColor: `${getProfessorColor(recipe.author, settings.professorColors)}40`
+                  color: professorColor,
+                  backgroundColor: `${professorColor}14`,
+                  borderColor: `${professorColor}40`
                 }}
+                title={recipe.author}
               >
                 <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: getProfessorColor(recipe.author, settings.professorColors)! }}
-                />
-                {recipe.author}
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0"
+                  style={{ backgroundColor: professorColor }}
+                >
+                  {professorInitials}
+                </span>
+                {professorShortName}
               </span>
             )}
           </div>

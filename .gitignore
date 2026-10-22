@@ -48,3 +48,6 @@ list_models_v2.cjs
 # Logs
 error.log
 *.log
+
+# Scripts temporales de trabajo
+_*.mjs

@@ -4,7 +4,7 @@ import {
   ArrowUp, ArrowDown, Calculator, Box, Book, FileText, Trash2, Plus,
   Copy, Pencil
 } from 'lucide-react';
-import { cn, getProfessorColor } from '../../lib/utils';
+import { cn, getProfessorColor, getProfessorInitials, getProfessorShortName } from '../../lib/utils';
 import { getRecipeBreakdown } from '../../lib/costing';
 import { Recipe, Supply, AppSettings, Equipment, IngredientMapping } from '../../types';
 import { Badge } from '../shared/Badge';
@@ -385,10 +385,12 @@ export const BookView = React.memo<BookViewProps>(({
                         )}
                         {r.author && getProfessorColor(r.author, settings.professorColors) && (
                           <span
-                            className="shrink-0 w-2.5 h-2.5 rounded-full border border-white/40"
+                            className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-sm"
                             style={{ backgroundColor: getProfessorColor(r.author, settings.professorColors)! }}
                             title={r.author}
-                          />
+                          >
+                            {getProfessorInitials(r.author)}
+                          </span>
                         )}
                       </button>
 
@@ -682,18 +684,21 @@ const RecipeDetailSheet = React.memo<RecipeDetailSheetProps>(({
             </span>
             {selectedRecipe.author && getProfessorColor(selectedRecipe.author, settings.professorColors) && (
               <span
-                className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full border mt-2"
+                className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest pl-1 pr-2.5 py-1 rounded-full border mt-2"
                 style={{
                   color: getProfessorColor(selectedRecipe.author, settings.professorColors)!,
-                  backgroundColor: `${getProfessorColor(selectedRecipe.author, settings.professorColors)}15`,
+                  backgroundColor: `${getProfessorColor(selectedRecipe.author, settings.professorColors)}14`,
                   borderColor: `${getProfessorColor(selectedRecipe.author, settings.professorColors)}40`
                 }}
+                title={selectedRecipe.author}
               >
                 <span
-                  className="w-1.5 h-1.5 rounded-full"
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0"
                   style={{ backgroundColor: getProfessorColor(selectedRecipe.author, settings.professorColors)! }}
-                />
-                {selectedRecipe.author}
+                >
+                  {getProfessorInitials(selectedRecipe.author)}
+                </span>
+                {getProfessorShortName(selectedRecipe.author)}
               </span>
             )}
           </div>

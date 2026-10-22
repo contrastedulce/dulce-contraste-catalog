@@ -28,3 +28,22 @@ export function getProfessorColor(author: string | null | undefined, professorCo
   });
   return match ? match.color : null;
 }
+
+// Iniciales del profesor para el avatar (ej: "María Gracia Mujica (MGM)" -> "MG")
+export function getProfessorInitials(author: string | null | undefined): string {
+  if (!author) return '';
+  const sinParentesis = author.replace(/\([^)]*\)/g, '').trim();
+  const palabras = sinParentesis.split(/\s+/).filter(Boolean);
+  if (palabras.length === 0) return '';
+  if (palabras.length === 1) return palabras[0].substring(0, 2).toUpperCase();
+  return (palabras[0][0] + palabras[1][0]).toUpperCase();
+}
+
+// Nombre corto del profesor para mostrar en la etiqueta
+export function getProfessorShortName(author: string | null | undefined): string {
+  if (!author) return '';
+  const entreParentesis = author.match(/\(([^)]+)\)/);
+  if (entreParentesis) return entreParentesis[1].trim();
+  const palabras = author.trim().split(/\s+/).filter(Boolean);
+  return palabras[0] || author.trim();
+}
