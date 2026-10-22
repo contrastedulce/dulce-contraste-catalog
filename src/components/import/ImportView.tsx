@@ -64,7 +64,7 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
   const [filtroAutor, setFiltroAutor] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
-  const [soloSeleccionables, setSoloSeleccionables] = useState(false);
+  const [ocultarExistentes, setOcultarExistentes] = useState(true);
 
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
   const [expandida, setExpandida] = useState<string | null>(null);
@@ -180,7 +180,8 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
       if (filtroAutor && r.autor !== filtroAutor) return false;
       if (filtroTipo && tipoFinal(r) !== filtroTipo) return false;
       if (filtroEstado && r.estado !== filtroEstado) return false;
-      if (soloSeleccionables && r.estado === 'coincide') return false;
+      // Por defecto se ocultan las que ya estan en la app (ya importadas)
+      if (ocultarExistentes && !filtroEstado && r.estado === 'coincide') return false;
       if (!q) return true;
       return (
         nombreFinal(r).toLowerCase().includes(q) ||
@@ -189,7 +190,7 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
         r.ingredientes.some((i) => i.nombre.toLowerCase().includes(q))
       );
     });
-  }, [datos, busqueda, filtroAutor, filtroTipo, filtroEstado, soloSeleccionables, cambios]);
+  }, [datos, busqueda, filtroAutor, filtroTipo, filtroEstado, ocultarExistentes, cambios]);
 
   const visibles = filtradas.slice(0, pagina * POR_PAGINA);
 
@@ -395,6 +396,15 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
             </button>
           ))}
           <div className="h-5 w-px bg-slate-200 mx-1" />
+          <label className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 cursor-pointer select-none hover:bg-slate-200 transition-all">
+            <input
+              type="checkbox"
+              checked={ocultarExistentes}
+              onChange={(e) => { setOcultarExistentes(e.target.checked); setPagina(1); }}
+              className="w-3.5 h-3.5 accent-primary cursor-pointer"
+            />
+            Ocultar ya importadas
+          </label>
           <button onClick={seleccionarVisibles} className="px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 hover:bg-emerald-100">
             Seleccionar visibles ({visibles.length})
           </button>
@@ -402,7 +412,8 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
             Limpiar
           </button>
           <span className="ml-auto text-xs font-bold text-slate-400">
-            {filtradas.length} resultados · {seleccion.size} seleccionadas
+            {filtradas.length} por revisar · {seleccion.size} seleccionadas
+            {ocultarExistentes && !filtroEstado && ` · ${t.coinciden} ya en la app`}
           </span>
         </div>
       </GlassCard>
@@ -628,8 +639,15 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
 
       {filtradas.length === 0 && (
         <GlassCard className="p-16 border-none shadow-sm text-center">
-          <Info className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="font-black text-slate-600">No hay recetas con esos filtros</p>
+          <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto mb-3" />
+          <p className="font-black text-slate-700 text-lg">
+            {ocultarExistentes ? '¡No quedan recetas por revisar con esos filtros!' : 'No hay recetas con esos filtros'}
+          </p>
+          <p className="text-sm text-slate-500 mt-2">
+            {ocultarExistentes
+              ? `${t.coinciden} recetas ya están en la app. Desmarca "Ocultar ya importadas" para verlas.`
+              : 'Prueba cambiando la búsqueda o los filtros.'}
+          </p>
         </GlassCard>
       )}
 
