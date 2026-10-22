@@ -51,3 +51,6 @@ error.log
 
 # Scripts temporales de trabajo
 _*.mjs
+
+# Respaldos con fecha (contienen datos del negocio)
+db.respaldo_*.json
