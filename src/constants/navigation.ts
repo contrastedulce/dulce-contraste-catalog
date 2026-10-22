@@ -10,7 +10,8 @@ import {
   FileText,
   Wallet,
   Users,
-  ListChecks
+  ListChecks,
+  Upload
 } from 'lucide-react';
 
 export const NAV_ITEMS = [
@@ -25,5 +26,6 @@ export const NAV_ITEMS = [
   { id: 'equipment', label: 'Equipos', icon: Wrench },
   { id: 'finances', label: 'Finanzas', icon: BarChart3 },
   { id: 'quotes', label: 'Cotizador', icon: FileText },
+  { id: 'import', label: 'Importar PDFs', icon: Upload },
   { id: 'settings', label: 'Ajustes', icon: Settings },
 ];
