@@ -469,6 +469,9 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
       const extraccion = JSON.parse(fs.readFileSync(ARCHIVO_EXTRACCION, "utf-8"));
       const existentes = db.recipes || [];
       const supplies = db.supplies || [];
+      // Correcciones aprendidas de importaciones anteriores
+      const aprendidos: Record<string, { nombre?: string; unidad?: string; supplyId?: string }> =
+        (db as any).importMappings || {};
 
       const recetas: any[] = [];
       for (const pdf of extraccion.pdfs || []) {
@@ -480,10 +483,23 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
             tipo: r.tipo === "COMPLETA" ? "completa" : r.tipo === "SUB-RECETA" ? "sub" : "por-clasificar",
             autor: r.autor || null,
             pdf: r.pdf,
-            ingredientes: (r.ingredientes || []).map((i: any) => ({
-              ...i,
-              insumoId: buscarInsumo(i.nombre, supplies)?.id || null,
-            })),
+            ingredientes: (r.ingredientes || []).map((i: any) => {
+              const clave = normTxt(i.nombre);
+              const aprendido = aprendidos[clave];
+              const nombreFinal = aprendido?.nombre || i.nombre;
+              const unidadFinal = aprendido?.unidad || i.unidad;
+              const insumo = aprendido?.supplyId
+                ? supplies.find((s: any) => s.id === aprendido.supplyId)
+                : buscarInsumo(nombreFinal, supplies);
+              return {
+                ...i,
+                nombre: nombreFinal,
+                unidad: unidadFinal,
+                nombreOriginal: i.nombre,
+                insumoId: insumo?.id || null,
+                corregido: !!aprendido,
+              };
+            }),
             pasos: r.pasos || [],
             componentes: r.componentes || [],
             ...analisis,
@@ -507,6 +523,7 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
           similares: recetas.filter((r) => r.estado === "similar").length,
         },
         autores,
+        aprendidos: Object.keys(aprendidos).length,
         recetas,
       });
     } catch (e: any) {
@@ -525,6 +542,9 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
 
       if (!db.recipes) db.recipes = [];
       const supplies = db.supplies || [];
+      const aprendidos: Record<string, { nombre?: string; unidad?: string; supplyId?: string }> =
+        (db as any).importMappings || {};
+      let cambiosAprendidos = 0;
       let actualizadas = 0;
       let agregadas = 0;
       const creadasPorNombre = new Map<string, string>(); // nombre normalizado -> id
@@ -536,9 +556,30 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
         const ingredientes = (r.ingredientes || [])
           .filter((i: any) => i.nombre && String(i.nombre).trim())
           .map((i: any) => {
-            const insumo = buscarInsumo(i.nombre, supplies);
+            const nombreLimpio = String(i.nombre).trim();
+            const insumo = buscarInsumo(nombreLimpio, supplies);
+
+            // APRENDIZAJE: si el usuario corrigió el nombre o la unidad, se guarda para el futuro
+            const original = String(i.nombreOriginal || "").trim();
+            if (original && normTxt(original) !== normTxt(nombreLimpio)) {
+              const clave = normTxt(original);
+              const previo = aprendidos[clave] || {};
+              aprendidos[clave] = {
+                ...previo,
+                nombre: nombreLimpio,
+                unidad: i.unidad || previo.unidad || undefined,
+                ...(insumo ? { supplyId: insumo.id } : {}),
+              };
+              cambiosAprendidos++;
+            } else if (insumo && i.insumoId && insumo.id !== i.insumoId) {
+              // Vinculación manual a un insumo distinto
+              const clave = normTxt(nombreLimpio);
+              aprendidos[clave] = { ...(aprendidos[clave] || {}), nombre: nombreLimpio, supplyId: i.insumoId };
+              cambiosAprendidos++;
+            }
+
             return {
-              name: String(i.nombre).trim(),
+              name: nombreLimpio,
               quantity: typeof i.cantidad === "number" ? i.cantidad : parseFloat(i.cantidad) || 0,
               unit: i.unidad || insumo?.unit || "unidad",
               ...(insumo ? { supplyId: insumo.id } : {}),
@@ -595,12 +636,17 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
         }
       }
 
+      // Guardar lo aprendido
+      (db as any).importMappings = aprendidos;
+
       saveDb();
       res.json({
         status: "ok",
         actualizadas,
         agregadas,
         totalRecetas: db.recipes.length,
+        aprendidos: cambiosAprendidos,
+        totalAprendidos: Object.keys(aprendidos).length,
       });
     } catch (e: any) {
       console.error("Error en /api/import/apply:", e);

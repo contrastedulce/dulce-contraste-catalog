@@ -14,6 +14,8 @@ interface IngredienteExtraido {
   unidad: string | null;
   nombre: string;
   insumoId: string | null;
+  nombreOriginal?: string;
+  corregido?: boolean;
 }
 
 interface RecetaExtraida {
@@ -43,6 +45,7 @@ interface VistaPrevia {
     similares: number;
   };
   autores: string[];
+  aprendidos?: number;
   recetas: RecetaExtraida[];
 }
 
@@ -65,6 +68,8 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
   const [expandida, setExpandida] = useState<string | null>(null);
   // Cambios locales de nombre y tipo
   const [cambios, setCambios] = useState<Record<string, { nombre?: string; tipo?: RecetaExtraida['tipo'] }>>({});
+  // Ediciones de ingredientes y pasos
+  const [ediciones, setEdiciones] = useState<Record<string, { ingredientes?: IngredienteExtraido[]; pasos?: string[] }>>({});
   const [pagina, setPagina] = useState(1);
 
   const cargar = async () => {
@@ -93,6 +98,54 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
 
   const nombreFinal = (r: RecetaExtraida) => cambios[r.id]?.nombre ?? r.nombre;
   const tipoFinal = (r: RecetaExtraida) => cambios[r.id]?.tipo ?? r.tipo;
+  const ingsDe = (r: RecetaExtraida) => ediciones[r.id]?.ingredientes ?? r.ingredientes;
+  const pasosDe = (r: RecetaExtraida) => ediciones[r.id]?.pasos ?? r.pasos;
+
+  /** Modifica un ingrediente de una receta */
+  const editarIngrediente = (r: RecetaExtraida, idx: number, campo: 'cantidad' | 'unidad' | 'nombre', valor: any) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.ingredientes ?? r.ingredientes.map((i) => ({ ...i }));
+      const nuevos = actuales.map((i, k) => (k === idx ? { ...i, [campo]: valor } : i));
+      return { ...prev, [r.id]: { ...prev[r.id], ingredientes: nuevos } };
+    });
+  };
+
+  const editarPaso = (r: RecetaExtraida, idx: number, valor: string) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.pasos ?? [...r.pasos];
+      const nuevos = actuales.map((p, k) => (k === idx ? valor : p));
+      return { ...prev, [r.id]: { ...prev[r.id], pasos: nuevos } };
+    });
+  };
+
+  const quitarPaso = (r: RecetaExtraida, idx: number) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.pasos ?? [...r.pasos];
+      return { ...prev, [r.id]: { ...prev[r.id], pasos: actuales.filter((_, k) => k !== idx) } };
+    });
+  };
+
+  const agregarPaso = (r: RecetaExtraida) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.pasos ?? [...r.pasos];
+      return { ...prev, [r.id]: { ...prev[r.id], pasos: [...actuales, ''] } };
+    });
+  };
+
+  const quitarIngrediente = (r: RecetaExtraida, idx: number) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.ingredientes ?? r.ingredientes.map((i) => ({ ...i }));
+      return { ...prev, [r.id]: { ...prev[r.id], ingredientes: actuales.filter((_, k) => k !== idx) } };
+    });
+  };
+
+  const agregarIngrediente = (r: RecetaExtraida) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.ingredientes ?? r.ingredientes.map((i) => ({ ...i }));
+      const nuevos = [...actuales, { cantidad: null, unidad: null, nombre: '', insumoId: null, nombreOriginal: '' } as any];
+      return { ...prev, [r.id]: { ...prev[r.id], ingredientes: nuevos } };
+    });
+  };
 
   const filtradas = useMemo(() => {
     if (!datos) return [];
@@ -153,6 +206,8 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
           ...r,
           nombre: nombreFinal(r),
           tipo: tipoFinal(r),
+          ingredientes: ingsDe(r),
+          pasos: pasosDe(r),
         }));
       const resp = await fetch('/api/import/apply', {
         method: 'POST',
@@ -398,9 +453,10 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
                   <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-400 font-bold flex-wrap">
                     <span className="flex items-center gap-1"><User className="w-3 h-3" />{r.autor || 'Sin profesora'}</span>
                     <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{r.pdf}</span>
-                    <span>{r.ingredientes.length} ing.</span>
-                    <span>{r.pasos.length} pasos</span>
+                    <span>{ingsDe(r).length} ing.</span>
+                    <span>{pasosDe(r).length} pasos</span>
                     {r.componentes.length > 0 && <span className="text-purple-500">{r.componentes.length} componentes</span>}
+                    {ediciones[r.id] && <span className="text-primary font-black">editada</span>}
                   </div>
                 </div>
 
@@ -413,42 +469,108 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
               </div>
 
               {abierta && (
-                <div className="px-4 pb-4 pl-[3.75rem] grid grid-cols-1 lg:grid-cols-2 gap-4 border-t border-slate-50 pt-4">
+                <div className="px-4 pb-4 pl-[3.75rem] grid grid-cols-1 lg:grid-cols-2 gap-5 border-t border-slate-50 pt-4">
+                  {/* ---------- INGREDIENTES EDITABLES ---------- */}
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                      Ingredientes ({r.ingredientes.length})
-                    </p>
-                    <div className="space-y-1 max-h-64 overflow-y-auto pr-2">
-                      {r.ingredientes.map((i, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-xs">
-                          <span className="w-14 text-right font-black text-slate-400 tabular-nums shrink-0">
-                            {i.cantidad ?? '—'}
-                          </span>
-                          <span className="w-12 text-[10px] font-black uppercase text-slate-400 shrink-0">
-                            {i.unidad || ''}
-                          </span>
-                          <span className={cn('truncate', i.insumoId ? 'text-slate-700' : 'text-amber-600')}>
-                            {i.nombre}
-                          </span>
-                          {i.insumoId && <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />}
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Ingredientes ({ingsDe(r).length})
+                      </p>
+                      <button
+                        onClick={() => agregarIngrediente(r)}
+                        className="text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Añadir
+                      </button>
+                    </div>
+                    <div className="space-y-1 max-h-72 overflow-y-auto pr-2">
+                      {ingsDe(r).map((i, idx) => (
+                        <div key={idx} className="flex items-center gap-1 group/ing">
+                          <input
+                            type="number"
+                            step="any"
+                            value={i.cantidad ?? ''}
+                            onChange={(e) => editarIngrediente(r, idx, 'cantidad', e.target.value === '' ? null : parseFloat(e.target.value))}
+                            className="w-14 px-1 py-1 text-xs text-right font-black text-slate-600 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none tabular-nums"
+                            placeholder="—"
+                          />
+                          <input
+                            type="text"
+                            value={i.unidad ?? ''}
+                            onChange={(e) => editarIngrediente(r, idx, 'unidad', e.target.value)}
+                            className="w-14 px-1 py-1 text-[10px] font-black uppercase text-slate-500 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none"
+                            placeholder="unidad"
+                          />
+                          <input
+                            type="text"
+                            value={i.nombre}
+                            onChange={(e) => editarIngrediente(r, idx, 'nombre', e.target.value)}
+                            className={cn(
+                              'flex-1 px-1.5 py-1 text-xs bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none',
+                              i.insumoId ? 'text-slate-700' : 'text-amber-600 font-medium'
+                            )}
+                            placeholder="nombre del ingrediente"
+                          />
+                          {i.insumoId ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          )}
+                          <button
+                            onClick={() => quitarIngrediente(r, idx)}
+                            className="opacity-0 group-hover/ing:opacity-100 text-slate-300 hover:text-rose-500 transition-all shrink-0"
+                            title="Quitar ingrediente"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       ))}
+                      {ingsDe(r).length === 0 && (
+                        <p className="text-xs text-slate-400 italic py-2">Sin ingredientes</p>
+                      )}
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-2">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-500 inline" /> = vinculado al catálogo de insumos
+                    <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500 inline" /> vinculado al catálogo ·
+                      <AlertCircle className="w-3 h-3 text-amber-400 inline ml-1" /> sin vincular ·
+                      <b> tus correcciones se guardan para futuras importaciones</b>
                     </p>
                   </div>
+
+                  {/* ---------- PASOS EDITABLES ---------- */}
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                      Preparación ({r.pasos.length})
-                    </p>
-                    <div className="space-y-1.5 max-h-64 overflow-y-auto pr-2">
-                      {r.pasos.map((p, idx) => (
-                        <p key={idx} className="text-xs text-slate-600 leading-relaxed">
-                          <span className="font-black text-slate-300 mr-1">{idx + 1}.</span>{p}
-                        </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Preparación ({pasosDe(r).length})
+                      </p>
+                      <button
+                        onClick={() => agregarPaso(r)}
+                        className="text-[10px] font-black uppercase tracking-wider text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Añadir
+                      </button>
+                    </div>
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-2">
+                      {pasosDe(r).map((p, idx) => (
+                        <div key={idx} className="flex items-start gap-1 group/paso">
+                          <span className="text-[10px] font-black text-slate-300 mt-1.5 w-4 shrink-0 text-right">{idx + 1}</span>
+                          <textarea
+                            value={p}
+                            onChange={(e) => editarPaso(r, idx, e.target.value)}
+                            rows={Math.max(1, Math.ceil(p.length / 46))}
+                            className="flex-1 px-1.5 py-1 text-xs text-slate-600 leading-relaxed bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none resize-none"
+                          />
+                          <button
+                            onClick={() => quitarPaso(r, idx)}
+                            className="opacity-0 group-hover/paso:opacity-100 text-slate-300 hover:text-rose-500 transition-all shrink-0 mt-1"
+                            title="Quitar paso"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       ))}
-                      {r.pasos.length === 0 && <p className="text-xs text-slate-400 italic">Sin pasos registrados</p>}
+                      {pasosDe(r).length === 0 && (
+                        <p className="text-xs text-slate-400 italic py-2">Sin pasos registrados</p>
+                      )}
                     </div>
                     {r.componentes.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-slate-100">
