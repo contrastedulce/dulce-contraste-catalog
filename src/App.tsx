@@ -48,6 +48,7 @@ import { PurchasesView } from './components/purchases/PurchasesView';
 import { ToolkitView } from './components/toolkit/ToolkitView';
 import { SettingsView } from './components/settings/SettingsView';
 import { CustomersView } from './components/customers/CustomersView';
+import { ImportView } from './components/import/ImportView';
 import { ShoppingListView } from './components/shopping/ShoppingListView';
 import { INITIAL_PRODUCTS, INITIAL_SETTINGS, INITIAL_RECIPES } from './constants/initialData';
 import { PDF_RECIPES, PDF_SUPPLIES } from './constants/pdfRecipes';
@@ -2705,6 +2706,7 @@ export default function App() {
     { id: 'equipment', label: 'Equipos', icon: Wrench },
     { id: 'orders', label: 'Pedidos', icon: ShoppingCart },
     { id: 'quotes', label: 'Cotizador', icon: FileText },
+    { id: 'import', label: 'Importar PDFs', icon: Upload },
     { id: 'finances', label: 'Finanzas', icon: TrendingUp },
     { id: 'tools', label: 'Herramientas', icon: Calculator },
     { id: 'settings', label: 'Configuración', icon: Settings },
@@ -2981,6 +2983,8 @@ export default function App() {
             formatCurrency={(amt) => formatCurrency(amt, theme.currency)}
           />
         );
+      case 'import':
+        return <ImportView professorColors={settings.professorColors || []} />;
       case 'purchases':
         return (
           <PurchasesView 

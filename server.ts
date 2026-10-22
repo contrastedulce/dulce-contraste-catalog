@@ -400,6 +400,214 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
     }
   });
 
+  // ============================================================
+  //  IMPORTACIÓN DE RECETAS DESDE PDFs (con revisión previa)
+  // ============================================================
+  const ARCHIVO_EXTRACCION = path.join(process.cwd(), "_informe_pdfs.json");
+
+  /** Normaliza un texto para comparar nombres */
+  const normTxt = (s: any) =>
+    String(s || "")
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  /** Busca el insumo del catálogo que corresponde a un nombre de ingrediente */
+  const buscarInsumo = (nombre: string, supplies: any[]) => {
+    const n = normTxt(nombre);
+    if (!n || n.length < 3) return null;
+    // 1) Coincidencia exacta normalizada
+    let found = supplies.find((s) => normTxt(s.name) === n);
+    if (found) return found;
+    // 2) El nombre del insumo está contenido en el ingrediente (o viceversa), con 4+ letras
+    found = supplies.find((s) => {
+      const sn = normTxt(s.name);
+      if (sn.length < 4) return false;
+      return n.includes(sn) || sn.includes(n);
+    });
+    return found || null;
+  };
+
+  /** Analiza la coincidencia de una receta extraída con las existentes */
+  const analizarCoincidencia = (receta: any, existentes: any[]) => {
+    const n = normTxt(receta.nombre);
+    if (!n) return { estado: "nueva" };
+
+    const porNombre = existentes.filter((e) => normTxt(e.name) === n);
+    if (porNombre.length === 0) {
+      // ¿Alguna existente con nombre que contenga al otro?
+      const parecida = existentes.find((e) => {
+        const en = normTxt(e.name);
+        return en.length > 6 && n.length > 6 && (en.includes(n) || n.includes(en));
+      });
+      return parecida
+        ? { estado: "similar", coincideCon: { id: parecida.id, name: parecida.name } }
+        : { estado: "nueva" };
+    }
+
+    // Nombre idéntico: verificar autor y contenido
+    const mismaAutora = porNombre.find(
+      (e) => e.author && receta.autor && normTxt(e.author).includes(normTxt(receta.autor).split(" ")[0])
+    );
+    const elegida = mismaAutora || porNombre[0];
+    return {
+      estado: "coincide",
+      coincideCon: { id: elegida.id, name: elegida.name, author: elegida.author || null },
+    };
+  };
+
+  // Vista previa: recetas extraídas + estado respecto a la base actual
+  app.get("/api/import/preview", (req, res) => {
+    try {
+      if (!fs.existsSync(ARCHIVO_EXTRACCION)) {
+        return res.status(404).json({
+          error: "No hay extracción disponible. Ejecuta primero el procesamiento de PDFs.",
+        });
+      }
+      const extraccion = JSON.parse(fs.readFileSync(ARCHIVO_EXTRACCION, "utf-8"));
+      const existentes = db.recipes || [];
+      const supplies = db.supplies || [];
+
+      const recetas: any[] = [];
+      for (const pdf of extraccion.pdfs || []) {
+        for (const r of pdf.recetas || []) {
+          const analisis = analizarCoincidencia(r, existentes);
+          recetas.push({
+            id: r.id,
+            nombre: r.nombre,
+            tipo: r.tipo === "COMPLETA" ? "completa" : r.tipo === "SUB-RECETA" ? "sub" : "por-clasificar",
+            autor: r.autor || null,
+            pdf: r.pdf,
+            ingredientes: (r.ingredientes || []).map((i: any) => ({
+              ...i,
+              insumoId: buscarInsumo(i.nombre, supplies)?.id || null,
+            })),
+            pasos: r.pasos || [],
+            componentes: r.componentes || [],
+            ...analisis,
+          });
+        }
+      }
+
+      const autores = [...new Set(recetas.map((r) => r.autor).filter(Boolean))].sort();
+
+      res.json({
+        generado: extraccion.generado,
+        totalPdfs: extraccion.totalPdfs,
+        procesados: extraccion.procesados,
+        totales: {
+          total: recetas.length,
+          completas: recetas.filter((r) => r.tipo === "completa").length,
+          subs: recetas.filter((r) => r.tipo === "sub").length,
+          porClasificar: recetas.filter((r) => r.tipo === "por-clasificar").length,
+          nuevas: recetas.filter((r) => r.estado === "nueva").length,
+          coinciden: recetas.filter((r) => r.estado === "coincide").length,
+          similares: recetas.filter((r) => r.estado === "similar").length,
+        },
+        autores,
+        recetas,
+      });
+    } catch (e: any) {
+      console.error("Error en /api/import/preview:", e);
+      res.status(500).json({ error: "Error al leer la extracción: " + e.message });
+    }
+  });
+
+  // Aplicar: actualiza las que coinciden (mismo id) y agrega las nuevas. NUNCA borra.
+  app.post("/api/import/apply", (req, res) => {
+    try {
+      const { recetas, modo } = req.body || {};
+      if (!Array.isArray(recetas) || recetas.length === 0) {
+        return res.status(400).json({ error: "No se recibieron recetas para importar." });
+      }
+
+      if (!db.recipes) db.recipes = [];
+      const supplies = db.supplies || [];
+      let actualizadas = 0;
+      let agregadas = 0;
+      const creadasPorNombre = new Map<string, string>(); // nombre normalizado -> id
+
+      for (const r of recetas) {
+        const nNorm = normTxt(r.nombre);
+        if (!nNorm) continue;
+
+        const ingredientes = (r.ingredientes || [])
+          .filter((i: any) => i.nombre && String(i.nombre).trim())
+          .map((i: any) => {
+            const insumo = buscarInsumo(i.nombre, supplies);
+            return {
+              name: String(i.nombre).trim(),
+              quantity: typeof i.cantidad === "number" ? i.cantidad : parseFloat(i.cantidad) || 0,
+              unit: i.unidad || insumo?.unit || "unidad",
+              ...(insumo ? { supplyId: insumo.id } : {}),
+            };
+          });
+
+        // ¿Existe ya? SOLO se actualiza si el estado es "coincide" (nombre idéntico + misma autora).
+        // Las "similares" se tratan como NUEVAS para no confundir recetas distintas
+        // (ej: "Tiramisú" de MGM vs "PIONONO TIRAMISÚ" de CESTINO).
+        let existente = null;
+        if (r.estado === "coincide" && r.coincideCon?.id) {
+          existente = db.recipes.find((x: any) => x.id === r.coincideCon.id);
+        }
+        if (!existente && r.estado !== "similar") {
+          existente = db.recipes.find(
+            (x: any) => normTxt(x.name) === nNorm && (!r.autor || !x.author || normTxt(x.author).includes(normTxt(r.autor).split(" ")[0]))
+          );
+        }
+
+        const datos = {
+          name: String(r.nombre).trim(),
+          type: r.tipo === "completa" ? "complete" : "sub",
+          yield: 1,
+          yieldUnit: "unidad",
+          ingredients: ingredientes,
+          instructions: r.pasos || [],
+          equipment: [],
+          laborCost: 0,
+          laborMinutes: { heavy: 0, light: 0 },
+          serviceMinutes: { electricity: 0, water: 0, gas: 0, machinery: 0, utensils: 0 },
+          extraCosts: { biosecurity: 0, packaging: 0 },
+          author: r.autor || null,
+          pdfPath: r.pdf || undefined,
+          catalogCategory: "Ninguno",
+        };
+
+        if (existente) {
+          // ACTUALIZAR en sitio: se conserva el id (productos y referencias intactos)
+          Object.assign(existente, datos, {
+            id: existente.id,
+            laborCost: existente.laborCost ?? 0,
+            laborMinutes: existente.laborMinutes || datos.laborMinutes,
+            serviceMinutes: existente.serviceMinutes || datos.serviceMinutes,
+            extraCosts: existente.extraCosts || datos.extraCosts,
+            equipment: (existente.equipment || []).length ? existente.equipment : datos.equipment,
+          });
+          creadasPorNombre.set(nNorm, existente.id);
+          actualizadas++;
+        } else {
+          const id = Math.random().toString(36).substr(2, 9);
+          db.recipes.push({ id, ...datos });
+          creadasPorNombre.set(nNorm, id);
+          agregadas++;
+        }
+      }
+
+      saveDb();
+      res.json({
+        status: "ok",
+        actualizadas,
+        agregadas,
+        totalRecetas: db.recipes.length,
+      });
+    } catch (e: any) {
+      console.error("Error en /api/import/apply:", e);
+      res.status(500).json({ error: "Error al importar: " + e.message });
+    }
+  });
+
   // Public Order Capture from Catalog
   app.post("/api/public/orders", (req, res) => {
     try {
