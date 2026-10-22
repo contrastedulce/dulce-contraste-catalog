@@ -6,6 +6,7 @@ import {
 import { GlassCard } from '../shared/GlassCard';
 import { Button } from '../shared/Button';
 import { Badge } from '../shared/Badge';
+import { SearchableSelect } from '../shared/SearchableSelect';
 import { cn } from '../../lib/utils';
 
 // ---------- Tipos ----------
@@ -46,6 +47,7 @@ interface VistaPrevia {
   };
   autores: string[];
   aprendidos?: number;
+  insumos?: { id: string; name: string; unit?: string }[];
   recetas: RecetaExtraida[];
 }
 
@@ -136,6 +138,30 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
     setEdiciones((prev) => {
       const actuales = prev[r.id]?.ingredientes ?? r.ingredientes.map((i) => ({ ...i }));
       return { ...prev, [r.id]: { ...prev[r.id], ingredientes: actuales.filter((_, k) => k !== idx) } };
+    });
+  };
+
+  /** Vincula el ingrediente a un insumo del catálogo (o lo deja como texto libre) */
+  const vincularInsumo = (r: RecetaExtraida, idx: number, insumoId: string) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.ingredientes ?? r.ingredientes.map((i) => ({ ...i }));
+      const insumo = (datos?.insumos || []).find((s) => s.id === insumoId);
+      if (!insumo) return prev;
+      const nuevos = actuales.map((i, k) =>
+        k === idx ? { ...i, nombre: insumo.name, unidad: insumo.unit || i.unidad, insumoId: insumo.id } : i
+      );
+      return { ...prev, [r.id]: { ...prev[r.id], ingredientes: nuevos } };
+    });
+  };
+
+  /** Usa un nombre libre (sin vincular a un insumo) */
+  const usarTextoLibre = (r: RecetaExtraida, idx: number, texto: string) => {
+    setEdiciones((prev) => {
+      const actuales = prev[r.id]?.ingredientes ?? r.ingredientes.map((i) => ({ ...i }));
+      const nuevos = actuales.map((i, k) =>
+        k === idx ? { ...i, nombre: texto, insumoId: null } : i
+      );
+      return { ...prev, [r.id]: { ...prev[r.id], ingredientes: nuevos } };
     });
   };
 
@@ -491,25 +517,27 @@ export const ImportView: React.FC<{ professorColors?: { name: string; color: str
                             step="any"
                             value={i.cantidad ?? ''}
                             onChange={(e) => editarIngrediente(r, idx, 'cantidad', e.target.value === '' ? null : parseFloat(e.target.value))}
-                            className="w-14 px-1 py-1 text-xs text-right font-black text-slate-600 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none tabular-nums"
+                            className="w-14 px-1 py-1 text-xs text-right font-black text-slate-600 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none tabular-nums shrink-0"
                             placeholder="—"
                           />
                           <input
                             type="text"
                             value={i.unidad ?? ''}
                             onChange={(e) => editarIngrediente(r, idx, 'unidad', e.target.value)}
-                            className="w-14 px-1 py-1 text-[10px] font-black uppercase text-slate-500 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none"
+                            className="w-14 px-1 py-1 text-[10px] font-black uppercase text-slate-500 bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none shrink-0"
                             placeholder="unidad"
                           />
-                          <input
-                            type="text"
-                            value={i.nombre}
-                            onChange={(e) => editarIngrediente(r, idx, 'nombre', e.target.value)}
-                            className={cn(
-                              'flex-1 px-1.5 py-1 text-xs bg-slate-50 border border-transparent hover:border-slate-200 focus:border-primary rounded outline-none',
-                              i.insumoId ? 'text-slate-700' : 'text-amber-600 font-medium'
-                            )}
-                            placeholder="nombre del ingrediente"
+                          {/* Buscador de insumos: vincula directamente con el catálogo */}
+                          <SearchableSelect
+                            className="flex-1 min-w-0"
+                            options={(datos?.insumos || []) as any}
+                            value={i.insumoId || ''}
+                            onChange={(id) => vincularInsumo(r, idx, id)}
+                            onAddNew={(texto) => usarTextoLibre(r, idx, texto)}
+                            placeholder={i.nombre || 'Buscar insumo...'}
+                            searchPlaceholder="Buscar en tus insumos..."
+                            emptyText="No está en el catálogo"
+                            size="sm"
                           />
                           {i.insumoId ? (
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />

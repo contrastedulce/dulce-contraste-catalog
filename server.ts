@@ -524,6 +524,7 @@ async function callUnifiedAI(prompt: string, schema?: any, image?: string) {
         },
         autores,
         aprendidos: Object.keys(aprendidos).length,
+        insumos: supplies.map((s: any) => ({ id: s.id, name: s.name, unit: s.unit })),
         recetas,
       });
     } catch (e: any) {
