@@ -62079,5 +62079,347 @@ export const INITIAL_RECIPES: Recipe[] = [
     "author": "María Gracia Mujica (MGM)",
     "pdfPath": "Brownies y Blondies rellenos MGM.PDF",
     "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "wecofx2e1",
+    "name": "Cheesecake brownies",
+    "type": "complete",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "queso crema",
+        "quantity": 220,
+        "unit": "gr",
+        "supplyId": "58r7s5tgk"
+      },
+      {
+        "name": "azúcar blanca",
+        "quantity": 50,
+        "unit": "gr",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "Huevos enteros",
+        "quantity": 1,
+        "unit": "und",
+        "supplyId": "fbqw3duz6"
+      },
+      {
+        "name": "vainilla",
+        "quantity": 5,
+        "unit": "ml",
+        "supplyId": "a0cykragp"
+      },
+      {
+        "name": "Choco Chips semi amargos",
+        "quantity": 100,
+        "unit": "gramos",
+        "supplyId": "hgbxvuuch"
+      },
+      {
+        "name": "mantequilla sin sal",
+        "quantity": 115,
+        "unit": "gr",
+        "supplyId": "bn90y50on"
+      },
+      {
+        "name": "Cobertura bitter",
+        "quantity": 160,
+        "unit": "gramos",
+        "supplyId": "mlu9fw1gz"
+      },
+      {
+        "name": "+ 2 cdas harina sin preparar",
+        "quantity": 90,
+        "unit": "gr",
+        "supplyId": "dpqr41o7p"
+      },
+      {
+        "name": "bicarbonato",
+        "quantity": 2,
+        "unit": "gr",
+        "supplyId": "9x5x72cfn"
+      },
+      {
+        "name": "Mantequilla sin sal",
+        "quantity": 115,
+        "unit": "gramos",
+        "supplyId": "bn90y50on"
+      },
+      {
+        "name": "aceite de coco",
+        "quantity": 15,
+        "unit": "ml",
+        "supplyId": "86j160d1y"
+      },
+      {
+        "name": "Azúcar Blanca",
+        "quantity": 200,
+        "unit": "gramos",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "azúcar rubia",
+        "quantity": 210,
+        "unit": "gr",
+        "supplyId": "3x0rluvr0"
+      },
+      {
+        "name": "Huevos enteros",
+        "quantity": 3,
+        "unit": "und",
+        "supplyId": "fbqw3duz6"
+      }
+    ],
+    "instructions": [
+      "Precalentar el horno a 180 grados y engrasar una lata cuadrada de 20x20cm.",
+      "En un tazón mediano mezclamos la harina, la sal, el bicarbonato.",
+      "En un tazón a baño maría derretimos la mantequilla, chocolate y aceite de coco.",
+      "Le agregamos el azúcar e integramos con la espátula.",
+      "Agregamos los huevos uno por uno y luego le agregamos los ingredientes secos.",
+      "Agregamos 2/3 de la masa en el molde.",
+      "Luego agregamos la mezcla de queso y con 1 cucharita colocamos partes del 1/3 de masa que queso y marmoleamos.",
+      "Horneamos a 180 grados hasta que esté listo.",
+      "Luego una vez listo cortamos por la mitad de manera horizontal, rellenamos con fudge y acomodamos en un pedestal."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Brownies y Blondies rellenos MGM.PDF",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "k2nclpzke",
+    "name": "Relleno de caramelo y pecanas",
+    "type": "sub",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "azúcar blanca",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "glucosa",
+        "quantity": 5,
+        "unit": "gr",
+        "supplyId": "o2y8gzn6x"
+      },
+      {
+        "name": "agua fría",
+        "quantity": 60,
+        "unit": "ml",
+        "supplyId": "padyn0xi0"
+      },
+      {
+        "name": "mantequilla",
+        "quantity": 30,
+        "unit": "gr",
+        "supplyId": "t97h623l6"
+      },
+      {
+        "name": "crema de leche",
+        "quantity": 180,
+        "unit": "gr",
+        "supplyId": "pdf_crema_leche"
+      },
+      {
+        "name": "sal de mesa",
+        "quantity": 2,
+        "unit": "gr",
+        "supplyId": "kavzhup6h"
+      },
+      {
+        "name": "pecanas picadas",
+        "quantity": 100,
+        "unit": "gr",
+        "supplyId": "pdf_pecanas"
+      }
+    ],
+    "instructions": [
+      "En una olla combinamos el azúcar con el agua y la glucosa y dejamos que se derrita e integre bien.",
+      "Agregamos la mantequilla fuera del fuego y mezclamos bien.",
+      "Luego agregamos la crema de leche y mezclamos bien también.",
+      "Agregamos las pecanas y movemos bien.",
+      "Cubrimos la olla con un papel toalla para que absorba la humedad y no se forme una costra hasta el momento del uso.",
+      "Guardamos un poco de esta salsa para colocarla sobre los brownies una vez cortados."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Brownies y Blondies rellenos MGM.PDF",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "dc7gdhe0x",
+    "name": "Mermelada de berries",
+    "type": "sub",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "Leche fresca (entera)",
+        "quantity": 500,
+        "unit": "gr",
+        "supplyId": "y9tyjb74t"
+      },
+      {
+        "name": "azúcar",
+        "quantity": 250,
+        "unit": "gr",
+        "supplyId": "7vgf4b4l7"
+      },
+      {
+        "name": "limón",
+        "quantity": 1,
+        "unit": "un",
+        "supplyId": "ohnkd2ntd"
+      }
+    ],
+    "instructions": [
+      "En una olla colocamos el ½ kg de berries junto con el azúcar y movemos hasta ir formando una compota.",
+      "Las frutas se van a formar como un pure de berries con textura.",
+      "Una vez listo luego de cocinar aproximadamente 20 minutos.",
+      "Agregamos el zumo de medio limón.",
+      "Dejamos enfriar para utilizar como relleno en nuestra masa de blondies."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Brownies y Blondies rellenos MGM.PDF",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "3zgr2eo6y",
+    "name": "Crepes con flores comestibles",
+    "type": "complete",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "Huevos enteros",
+        "quantity": 2,
+        "unit": "und",
+        "supplyId": "fbqw3duz6"
+      },
+      {
+        "name": "harina sin preparar",
+        "quantity": 125,
+        "unit": "gr",
+        "supplyId": "dpqr41o7p"
+      },
+      {
+        "name": "leche fresca",
+        "quantity": 250,
+        "unit": "ml",
+        "supplyId": "pdf_leche"
+      },
+      {
+        "name": "azúcar blanca",
+        "quantity": 10,
+        "unit": "gr",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "vainilla",
+        "quantity": 5,
+        "unit": "ml",
+        "supplyId": "a0cykragp"
+      },
+      {
+        "name": "sal de mesa",
+        "quantity": 1,
+        "unit": "un",
+        "supplyId": "kavzhup6h"
+      },
+      {
+        "name": "Mantequilla sin sal",
+        "quantity": 50,
+        "unit": "gramos",
+        "supplyId": "bn90y50on"
+      },
+      {
+        "name": "Manjar blanco de olla para rellenarlos",
+        "quantity": 100,
+        "unit": "gr",
+        "supplyId": "pdf_manjar"
+      }
+    ],
+    "instructions": [
+      "En una licuadora o procesadora colocamos los ingredientes de la receta sin incluir ni las flores comestibles ni el manjar blanco.",
+      "Licuamos bien hasta tener una mezcla homogénea y suelta.",
+      "En una sartén crepera caliente agregamos un poquito de mantequilla y limpiamos con ayuda de un papel toda la circunferencia por donde nuestra masa pasara.",
+      "Agregamos un poco de masa y estiramos.",
+      "Colocamos en crudo flores comestibles sobre la masa hasta que se adhieran a ella.",
+      "Le damos la vuelta y vamos acumulándolos hasta el momento de servirlos formando pañuelos rellenos de manjar de olla."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Brunch en casa MGM.pdf",
+    "catalogCategory": "Ninguno"
   }
 ];
