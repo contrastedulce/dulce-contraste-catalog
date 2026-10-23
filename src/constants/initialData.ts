@@ -61695,5 +61695,389 @@ export const INITIAL_RECIPES: Recipe[] = [
     "author": "María Gracia Mujica (MGM)",
     "pdfPath": "Bola de oro y dulces MGM.pdf",
     "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "ad8sy1sjn",
+    "name": "Glasé real",
+    "type": "sub",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "Huevos (solo claras)",
+        "quantity": 1,
+        "unit": "und",
+        "supplyId": "gla2uzxjy"
+      },
+      {
+        "name": "azúcar en polvo",
+        "quantity": 250,
+        "unit": "gr",
+        "supplyId": "d933jl17u"
+      },
+      {
+        "name": "limón",
+        "quantity": 1,
+        "unit": "un",
+        "supplyId": "ohnkd2ntd"
+      }
+    ],
+    "instructions": [],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Bola de oro y dulces MGM.pdf",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "zk8obgk62",
+    "name": "Salsa toffee",
+    "type": "sub",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "azúcar blanca",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "crema de leche",
+        "quantity": 120,
+        "unit": "gr",
+        "supplyId": "pdf_crema_leche"
+      }
+    ],
+    "instructions": [
+      "Derretimos el azúcar a fuego lento y dejamos que tenga un color ámbar claro.",
+      "Apagamos el fuego y le agregamos la crema de leche con vainilla",
+      "Dejamos que rompa hervor por el cambio de temperatura y comenzamos a moverlo con una cuchara de palo.",
+      "Dejamos que enfríe bien y lo usamos bien frio para rellenar los bombones."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Bombones y paletas MGM.pdf",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "gvpoh00r7",
+    "name": "Ganache de naranja",
+    "type": "sub",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "chocolate al 53% de cacao (bitter)",
+        "quantity": 250,
+        "unit": "gr"
+      },
+      {
+        "name": "crema de leche",
+        "quantity": 100,
+        "unit": "ml",
+        "supplyId": "pdf_crema_leche"
+      },
+      {
+        "name": "contrau de naranja (1 medida)",
+        "quantity": 0,
+        "unit": "unidad"
+      }
+    ],
+    "instructions": [
+      "Llevamos la crema de leche a romper 1 hervor.",
+      "Lo agregamos al chocolate picado y mezclamos hasta derretir.",
+      "Agregamos el contrau de naranja y dejamos reposar hasta que tome cuerpo una vez frio.",
+      "Este ganache podemos utilizarlo para rellenar bombones o para rellenar paletas decoradas. De no tener el licor de naranja pueden colocarle ralladura de naranja únicamente."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Bombones y paletas MGM.pdf",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "630u388r7",
+    "name": "Confitura de frutos rojos",
+    "type": "sub",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "Frambuesas frescas",
+        "quantity": 200,
+        "unit": "gramos",
+        "supplyId": "zxn3bnghi"
+      },
+      {
+        "name": "azúcar blanca",
+        "quantity": 300,
+        "unit": "gr",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "limón",
+        "quantity": 1,
+        "unit": "und",
+        "supplyId": "ohnkd2ntd"
+      }
+    ],
+    "instructions": [
+      "Colocamos la fruta picada irregularmente en una ollita junto con el azúcar blanco y vamos moviendo hasta formar una mermelada.",
+      "Al terminar colocamos unas gotas de limón (1/2 limón)",
+      "Podemos conservar esta confitura en un jar de vidrio y esta se puede usar para rellenar bombones, tortas, paletas o para comer con tostadas o usar de cualquier otra forma."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Bombones y paletas MGM.pdf",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "513t0jug9",
+    "name": "Blondies rellenos de crema de avellanas",
+    "type": "complete",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "mantequilla sin sal",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "bn90y50on"
+      },
+      {
+        "name": "azúcar rubia",
+        "quantity": 210,
+        "unit": "gr",
+        "supplyId": "3x0rluvr0"
+      },
+      {
+        "name": "azúcar blanca",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "huevo",
+        "quantity": 1,
+        "unit": "und",
+        "supplyId": "gla2uzxjy"
+      },
+      {
+        "name": "vainilla",
+        "quantity": 5,
+        "unit": "ml",
+        "supplyId": "a0cykragp"
+      },
+      {
+        "name": "harina sin preparar",
+        "quantity": 160,
+        "unit": "gr",
+        "supplyId": "dpqr41o7p"
+      },
+      {
+        "name": "Mantequilla sin sal",
+        "quantity": 10,
+        "unit": "gramos",
+        "supplyId": "bn90y50on"
+      },
+      {
+        "name": "Choco Chips semi amargos",
+        "quantity": 160,
+        "unit": "gramos",
+        "supplyId": "hgbxvuuch"
+      },
+      {
+        "name": "Crema de avellanas",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "nmnoa532r"
+      }
+    ],
+    "instructions": [
+      "Precalentamos el horno a 180 grados.",
+      "Engrasamos un molde de 20x20cm",
+      "Mezclamos la mantequilla y el azúcar rubia y blanca.",
+      "Agregamos los huevos y la vainilla",
+      "Agregamos la sal, la harina y los chips",
+      "Colocamos la mitad de la masa en el molde.",
+      "Colocamos la crema de avellanas y tapamos con la otra mitad de masa.",
+      "Llevamos al horno a 180grados por 25 – 30 min."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Brownies y Blondies rellenos MGM.PDF",
+    "catalogCategory": "Ninguno"
+  },
+  {
+    "id": "0zk7lcupe",
+    "name": "Blondies rellenos de compota de berries",
+    "type": "complete",
+    "yield": 1,
+    "yieldUnit": "unidad",
+    "ingredients": [
+      {
+        "name": "mantequilla sin sal",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "bn90y50on"
+      },
+      {
+        "name": "azúcar rubia",
+        "quantity": 105,
+        "unit": "gr",
+        "supplyId": "3x0rluvr0"
+      },
+      {
+        "name": "azúcar blanca",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "yslt8wfyl"
+      },
+      {
+        "name": "huevo",
+        "quantity": 1,
+        "unit": "und",
+        "supplyId": "gla2uzxjy"
+      },
+      {
+        "name": "vainilla",
+        "quantity": 5,
+        "unit": "gr",
+        "supplyId": "a0cykragp"
+      },
+      {
+        "name": "harina sin preparar",
+        "quantity": 160,
+        "unit": "gr",
+        "supplyId": "dpqr41o7p"
+      },
+      {
+        "name": "sal",
+        "quantity": 10,
+        "unit": "gr",
+        "supplyId": "t97h623l6"
+      },
+      {
+        "name": "Choco Chips semi amargos",
+        "quantity": 160,
+        "unit": "gramos",
+        "supplyId": "hgbxvuuch"
+      },
+      {
+        "name": "Mermelada de mix de berries",
+        "quantity": 200,
+        "unit": "gr",
+        "supplyId": "3q9pckr4c"
+      }
+    ],
+    "instructions": [
+      "Precalentamos el horno a 180 grados.",
+      "Engrasamos un molde de 20x20cm",
+      "Mezclamos la mantequilla y el azúcar rubia y blanca.",
+      "Agregamos los huevos y la vainilla",
+      "Agregamos la sal, la harina y los chips",
+      "Colocamos la mitad de la masa en el molde.",
+      "Colocamos la mermelada de berries y tapamos con la otra mitad de masa.",
+      "Llevamos al horno a 180grados por 25 – 30 min."
+    ],
+    "equipment": [],
+    "laborCost": 0,
+    "laborMinutes": {
+      "heavy": 0,
+      "light": 0
+    },
+    "serviceMinutes": {
+      "electricity": 0,
+      "water": 0,
+      "gas": 0,
+      "machinery": 0,
+      "utensils": 0
+    },
+    "extraCosts": {
+      "biosecurity": 0,
+      "packaging": 0
+    },
+    "author": "María Gracia Mujica (MGM)",
+    "pdfPath": "Brownies y Blondies rellenos MGM.PDF",
+    "catalogCategory": "Ninguno"
   }
 ];
